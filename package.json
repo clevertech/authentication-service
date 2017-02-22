@@ -1,0 +1,27 @@
+{
+  "name": "authentication-service",
+  "version": "0.1.0",
+  "description": "Clevertech's micro service for authentication",
+  "author": "Clevertech <support@clevertech.biz>",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "start-dev": "nodemon",
+    "test": "PORT=3001 ava --verbose --fail-fast",
+    "lint": "standard"
+  },
+  "dependencies": {
+    "ejs": "^2.5.6",
+    "express": "^4.13.3",
+    "jsonwebtoken": "^7.3.0",
+    "scrypt": "^6.0.3",
+    "winston": "*"
+  },
+  "devDependencies": {
+    "ava": "^0.18.1",
+    "chai": "*",
+    "node-fetch": "^1.6.3",
+    "nodemon": "^1.11.0",
+    "standard": "^8.6.0"
+  }
+}

@@ -1,0 +1,200 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title><%= projectName %> | <%= title %> </title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.7/semantic.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.7/semantic.min.js"></script>
+  <style type="text/css">
+    body {
+      background-color: #DADADA;
+    }
+
+    body > .grid {
+      height: 100%;
+    }
+
+    .image {
+      margin-top: -100px;
+    }
+
+    .column {
+      max-width: 450px;
+    }
+
+    .submit.button {
+      margin-bottom: 5px
+    }
+    .button.google, .button.google:hover {
+      background-color: #DB402C;
+      color: white
+    }
+    .button.facebook, .button.facebook:hover {
+      background-color: #324D8F;
+      color: white
+    }
+    .button.github, .button.github:hover {
+      background-color: #3C3C3C;
+      color: white
+    }
+    .button.linkedin, .button.linkedin:hover {
+      background-color: #263E58;
+      color: white
+    }
+    .button.twitter, .button.twitter:hover {
+      background-color: #1EA1F1;
+      color: white
+    }
+  </style>
+</head>
+<body>
+  <div class="ui middle aligned center aligned grid" data-action="signin" style="display: <%= action === 'signin' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal image header">
+        <div class="content">
+          Log-in to your account
+        </div>
+      </h2>
+      <form class="ui large form">
+        <div class="ui stacked segment">
+          <div class="field">
+            <div class="ui left icon input">
+              <i class="user icon"></i>
+              <input type="text" name="email" placeholder="E-mail address">
+            </div>
+          </div>
+          <div class="field">
+            <div class="ui left icon input">
+              <i class="lock icon"></i>
+              <input type="password" name="password" placeholder="Password">
+            </div>
+          </div>
+          <div class="ui fluid large teal submit button">Login</div>
+          <% if (someProvidersAvailable) { %> <p>or</p> <% } %>
+          <% if (availableProviders.google) { %>
+            <a href="<%= baseUrl %>/provider/google" class="ui fluid large google submit button"><i class="google icon"></i> Connect with Google</a>
+          <% } %>
+          <% if (availableProviders.facebook) { %>
+            <a href="<%= baseUrl %>/provider/facebook" class="ui fluid large facebook submit button"><i class="facebook icon"></i> Connect with Facebook</a>
+          <% } %>
+          <% if (availableProviders.github) { %>
+            <a href="<%= baseUrl %>/provider/github" class="ui fluid large github submit button"><i class="github icon"></i> Connect with GitHub</a>
+          <% } %>
+          <% if (availableProviders.linkedin) { %>
+            <a href="<%= baseUrl %>/provider/linkedin" class="ui fluid large linkedin submit button"><i class="linkedin icon"></i> Connect with LinkedIn</a>
+          <% } %>
+          <% if (availableProviders.twitter) { %>
+            <a href="<%= baseUrl %>/provider/twitter" class="ui fluid large twitter submit button"><i class="twitter icon"></i> Connect with Twitter</a>
+          <% } %>
+        </div>
+
+        <div class="ui error message"></div>
+
+      </form>
+
+      <div class="ui message">
+        <p>New to us? <a href="<%= baseUrl %>/register" data-push='register'>Register</a></p>
+        <p>Forgot password? <a href="<%= baseUrl %>/passwordreset" data-push='resetpassword'>Request a password reset</a></p>
+      </div>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="register" style="display: <%= action === 'register' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal image header">
+        <div class="content">
+          Register a new account
+        </div>
+      </h2>
+      <form class="ui large form">
+        <div class="ui stacked segment">
+          <div class="field">
+            <div class="ui left icon input">
+              <i class="user icon"></i>
+              <input type="text" name="email" placeholder="Your name">
+            </div>
+          </div>
+          <div class="field">
+            <div class="ui left icon input">
+              <i class="at icon"></i>
+              <input type="email" name="email" placeholder="E-mail address">
+            </div>
+          </div>
+          <div class="field">
+            <div class="ui left icon input">
+              <i class="lock icon"></i>
+              <input type="password" name="password" placeholder="Password">
+            </div>
+          </div>
+          <div class="ui fluid large teal submit button">Register</div>
+          <% if (someProvidersAvailable) { %> <p>or</p> <% } %>
+          <% if (availableProviders.google) { %>
+            <div class="ui fluid large google submit button"><i class="google icon"></i> Connect with Google</div>
+          <% } %>
+          <% if (availableProviders.facebook) { %>
+            <div class="ui fluid large facebook submit button"><i class="facebook icon"></i> Connect with Facebook</div>
+          <% } %>
+          <% if (availableProviders.github) { %>
+            <div class="ui fluid large github submit button"><i class="github icon"></i> Connect with GitHub</div>
+          <% } %>
+          <% if (availableProviders.linkedin) { %>
+            <div class="ui fluid large linkedin submit button"><i class="linkedin icon"></i> Connect with LinkedIn</div>
+          <% } %>
+          <% if (availableProviders.twitter) { %>
+            <div class="ui fluid large twitter submit button"><i class="twitter icon"></i> Connect with Twitter</div>
+          <% } %>
+        </div>
+
+        <div class="ui error message"></div>
+
+      </form>
+
+      <div class="ui message">
+        <p>Already have an account? <a href="<%= baseUrl %>/" data-push='signin'>Sign In</a></p>
+      </div>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="resetpassword" style="display: <%= action === 'resetpassword' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal image header">
+        <div class="content">
+          Reset your password
+        </div>
+      </h2>
+      <form class="ui large form">
+        <div class="ui stacked segment">
+          <div class="field">
+            <div class="ui left icon input">
+              <i class="user icon"></i>
+              <input type="text" name="email" placeholder="E-mail address">
+            </div>
+          </div>
+          <div class="ui fluid large teal submit button">Send reset instructions</div>
+        </div>
+
+        <div class="ui error message"></div>
+
+      </form>
+
+      <div class="ui message">
+        <p>Already have an account? <a href="<%= baseUrl %>/" data-push='signin'>Sign In</a></p>
+        <p>New to us? <a href="<%= baseUrl %>/register" data-push='register'>Register</a></p>
+      </div>
+    </div>
+  </div>
+  <script>
+    $(document).ready(function () {
+      $(document).on('click', '[data-push]', function (event) {
+        event.preventDefault()
+        var href = $(this).attr('href')
+        var action = $(this).attr('data-push')
+        $('[data-action]').css('display', 'none')
+        $('[data-action=' + action + ']').css('display', 'flex')
+        history.pushState({}, null, href)
+      })
+    })
+  </script>
+</body>
+</html>

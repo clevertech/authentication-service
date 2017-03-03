@@ -1,1 +1,1 @@
-module.exports = (router, redirectUrl) => false
+module.exports = (router, redirect, env) => false

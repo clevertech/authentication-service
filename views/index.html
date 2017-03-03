@@ -58,7 +58,7 @@
           Log-in to your account
         </div>
       </h2>
-      <form class="ui large form">
+      <form class="ui large form" method="POST" action="<%= baseUrl %>/signin">
         <div class="ui stacked segment">
           <div class="field">
             <div class="ui left icon input">
@@ -72,7 +72,7 @@
               <input type="password" name="password" placeholder="Password">
             </div>
           </div>
-          <div class="ui fluid large teal submit button">Login</div>
+          <button type="submit" class="ui fluid large teal submit button">Login</button>
           <% if (someProvidersAvailable) { %> <p>or</p> <% } %>
           <% if (availableProviders.google) { %>
             <a href="<%= baseUrl %>/provider/google" class="ui fluid large google submit button"><i class="google icon"></i> Connect with Google</a>
@@ -97,7 +97,7 @@
 
       <div class="ui message">
         <p>New to us? <a href="<%= baseUrl %>/register" data-push='register'>Register</a></p>
-        <p>Forgot password? <a href="<%= baseUrl %>/passwordreset" data-push='resetpassword'>Request a password reset</a></p>
+        <p>Forgot password? <a href="<%= baseUrl %>/resetpassword" data-push='resetpassword'>Request a password reset</a></p>
       </div>
     </div>
   </div>
@@ -108,14 +108,16 @@
           Register a new account
         </div>
       </h2>
-      <form class="ui large form">
+      <form class="ui large form" method="POST" action="<%= baseUrl %>/register">
         <div class="ui stacked segment">
+          <% for (const field of signupFields) { %>
           <div class="field">
             <div class="ui left icon input">
-              <i class="user icon"></i>
-              <input type="text" name="email" placeholder="Your name">
+              <i class="<%= field.icon %> icon"></i>
+              <input type="<%= field.type %>" name="<%= field.name %>" placeholder="<%= field.description %>">
             </div>
           </div>
+          <% } %>
           <div class="field">
             <div class="ui left icon input">
               <i class="at icon"></i>
@@ -128,22 +130,22 @@
               <input type="password" name="password" placeholder="Password">
             </div>
           </div>
-          <div class="ui fluid large teal submit button">Register</div>
+          <button type="submit" class="ui fluid large teal submit button">Register</button>
           <% if (someProvidersAvailable) { %> <p>or</p> <% } %>
           <% if (availableProviders.google) { %>
-            <div class="ui fluid large google submit button"><i class="google icon"></i> Connect with Google</div>
+            <a href="<%= baseUrl %>/provider/google" class="ui fluid large google submit button"><i class="google icon"></i> Connect with Google</a>
           <% } %>
           <% if (availableProviders.facebook) { %>
-            <div class="ui fluid large facebook submit button"><i class="facebook icon"></i> Connect with Facebook</div>
+            <a href="<%= baseUrl %>/provider/facebook" class="ui fluid large facebook submit button"><i class="facebook icon"></i> Connect with Facebook</a>
           <% } %>
           <% if (availableProviders.github) { %>
-            <div class="ui fluid large github submit button"><i class="github icon"></i> Connect with GitHub</div>
+            <a href="<%= baseUrl %>/provider/github" class="ui fluid large github submit button"><i class="github icon"></i> Connect with GitHub</a>
           <% } %>
           <% if (availableProviders.linkedin) { %>
-            <div class="ui fluid large linkedin submit button"><i class="linkedin icon"></i> Connect with LinkedIn</div>
+            <a href="<%= baseUrl %>/provider/linkedin" class="ui fluid large linkedin submit button"><i class="linkedin icon"></i> Connect with LinkedIn</a>
           <% } %>
           <% if (availableProviders.twitter) { %>
-            <div class="ui fluid large twitter submit button"><i class="twitter icon"></i> Connect with Twitter</div>
+            <a href="<%= baseUrl %>/provider/twitter" class="ui fluid large twitter submit button"><i class="twitter icon"></i> Connect with Twitter</a>
           <% } %>
         </div>
 
@@ -163,7 +165,7 @@
           Reset your password
         </div>
       </h2>
-      <form class="ui large form">
+      <form class="ui large form" method="POST" action="<%= baseUrl %>/resetpassword">
         <div class="ui stacked segment">
           <div class="field">
             <div class="ui left icon input">
@@ -171,7 +173,7 @@
               <input type="text" name="email" placeholder="E-mail address">
             </div>
           </div>
-          <div class="ui fluid large teal submit button">Send reset instructions</div>
+          <button type="submit" class="ui fluid large teal submit button">Send reset instructions</button>
         </div>
 
         <div class="ui error message"></div>

@@ -8,13 +8,14 @@ module.exports = (router, redirect, env) => {
   const facebookAppSecret = env('FACEBOOK_APP_SECRET')
   if (!facebookAppId || !facebookAppSecret) return false
 
-  const redirectUrl = (req) => baseUrl + req.baseUrl + '/provider/facebook/callback'
+  const redirectUrl = (req) => baseUrl + '/provider/facebook/callback'
 
   router.get('/provider/facebook', (req, res, next) => {
     const base = 'https://www.facebook.com/v2.8/dialog/oauth?'
     const query = querystring.stringify({
       app_id: facebookAppId,
-      redirect_uri: redirectUrl(req)
+      redirect_uri: redirectUrl(req),
+      scope: 'email'
     })
     res.redirect(base + query)
   })
@@ -44,8 +45,14 @@ module.exports = (router, redirect, env) => {
       })
       .then(([response, body]) => {
         console.log('facebook response', body)
+        const user = {
+          firstName: body.first_name,
+          lastName: body.last_name,
+          email: body.email,
+          login: 'facebook:' + body.id
+        }
         // TODO: redirect to signup to complete information
-        return redirect(body).then(url => res.redirect(url))
+        return redirect(user).then(url => res.redirect(url))
       })
       .catch(next)
   })

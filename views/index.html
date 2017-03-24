@@ -51,6 +51,19 @@
   </style>
 </head>
 <body>
+
+  <% if (error) { %>
+    <div class="ui negative message" style="margin: 20px">
+      <p><%= error %></p>
+    </div>
+  <% } %>
+
+  <% if (info) { %>
+    <div class="ui positive message" style="margin: 20px">
+      <p><%= info %></p>
+    </div>
+  <% } %>
+
   <div class="ui middle aligned center aligned grid" data-action="signin" style="display: <%= action === 'signin' ? 'flex' : 'none' %>">
     <div class="column">
       <h2 class="ui teal image header">
@@ -109,27 +122,30 @@
         </div>
       </h2>
       <form class="ui large form" method="POST" action="<%= baseUrl %>/register">
+        <input type="hidden" name="provider" value="<%= provider %>">
         <div class="ui stacked segment">
           <% for (const field of signupFields) { %>
           <div class="field">
             <div class="ui left icon input">
               <i class="<%= field.icon %> icon"></i>
-              <input type="<%= field.type %>" name="<%= field.name %>" placeholder="<%= field.description %>">
+              <input type="<%= field.type %>" name="<%= field.name %>" placeholder="<%= field.description %>" value="<%= userInfo[field.name] %>">
             </div>
           </div>
           <% } %>
           <div class="field">
             <div class="ui left icon input">
               <i class="at icon"></i>
-              <input type="email" name="email" placeholder="E-mail address">
+              <input type="email" name="email" placeholder="E-mail address" value="<%= userInfo.email %>">
             </div>
           </div>
+          <% if (!provider) { %>
           <div class="field">
             <div class="ui left icon input">
               <i class="lock icon"></i>
               <input type="password" name="password" placeholder="Password">
             </div>
           </div>
+          <% } %>
           <button type="submit" class="ui fluid large teal submit button">Register</button>
           <% if (someProvidersAvailable) { %> <p>or</p> <% } %>
           <% if (availableProviders.google) { %>
@@ -154,7 +170,7 @@
       </form>
 
       <div class="ui message">
-        <p>Already have an account? <a href="<%= baseUrl %>/" data-push='signin'>Sign In</a></p>
+        <p>Already have an account? <a href="<%= baseUrl %>/signin" data-push='signin'>Sign In</a></p>
       </div>
     </div>
   </div>
@@ -181,7 +197,7 @@
       </form>
 
       <div class="ui message">
-        <p>Already have an account? <a href="<%= baseUrl %>/" data-push='signin'>Sign In</a></p>
+        <p>Already have an account? <a href="<%= baseUrl %>/signin" data-push='signin'>Sign In</a></p>
         <p>New to us? <a href="<%= baseUrl %>/register" data-push='register'>Register</a></p>
       </div>
     </div>

@@ -3,7 +3,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const winston = require('winston')
 const ejs = require('ejs')
-const passwords = require('./utils/passwords')
+
 const constants = require('./constants')
 
 const providers = {
@@ -15,10 +15,18 @@ const providers = {
 }
 
 exports.createRouter = (config = {}) => {
+  const sendEmail = (...args) => {
+    console.log('sendEmail', args)
+  }
   const env = require('./utils/env')(config)
   const jwt = require('./utils/jwt')(env)
+  const database = require('./database/knex')(env)
+  const users = require('./services/users')(env, jwt, database, sendEmail)
+
+  database.init()
 
   const views = env('VIEWS_DIR') || path.join(__dirname, '..', 'views')
+  const baseUrl = env('BASE_URL')
   const projectName = env('PROJECT_NAME')
   const redirectUrl = env('REDIRECT_URL')
   const signupFields = env('SIGNUP_FIELDS', '').split(',')
@@ -27,31 +35,52 @@ exports.createRouter = (config = {}) => {
   const redirect = (payload) =>
     jwt.sign(payload).then(token => redirectUrl + '?jwt=' + token)
 
+  const signupRedirect = (payload) =>
+    jwt.sign(payload).then(token => baseUrl + '/register?provider=' + token)
+
+  const providerSignup = user =>
+    database.findUserByProviderLogin(user.login)
+      .then(existingUser => existingUser ? redirect(existingUser) : signupRedirect(user))
+
   const router = express.Router()
   router.use(bodyParser.urlencoded({ extended: false }))
+
   const availableProviders = Object.keys(providers).reduce((obj, provider) => {
-    obj[provider] = providers[provider](router, redirect, env)
+    obj[provider] = providers[provider](router, providerSignup, env, database)
     return obj
   }, {})
   const someProvidersAvailable = Object.keys(availableProviders).length > 0
 
   const renderIndex = (req, res, next, data) => {
-    const {baseUrl} = req
+    const { baseUrl, query } = req
+    const { error, info, provider } = query
     const filename = path.join(views, 'index.html')
     const allData = Object.assign({
       projectName,
       someProvidersAvailable,
       availableProviders,
       signupFields,
-      baseUrl
+      baseUrl,
+      error,
+      info,
+      provider
     }, data)
     const options = {}
-    ejs.renderFile(filename, allData, options, (err, html) => {
-      err ? next(err) : res.type('html').send(html)
-    })
+    Promise.resolve()
+      .then(() => provider ? jwt.verify(provider) : {})
+      .then(userInfo => {
+        Object.assign(allData, { userInfo })
+        ejs.renderFile(filename, allData, options, (err, html) => {
+          err ? next(err) : res.type('html').send(html)
+        })
+      })
   }
 
   router.get('/', (req, res, next) => {
+    res.redirect(req.baseUrl + '/signin')
+  })
+
+  router.get('/signin', (req, res, next) => {
     renderIndex(req, res, next, {
       title: 'Sign In',
       action: 'signin'
@@ -59,7 +88,9 @@ exports.createRouter = (config = {}) => {
   })
 
   router.post('/signin', (req, res, next) => {
-    redirect({ email: 'test@example.com' })
+    const { email, password } = req.body
+    users.login(email, password)
+      .then(user => redirect(user))
       .then(url => res.redirect(url))
       .catch(next)
   })
@@ -72,14 +103,9 @@ exports.createRouter = (config = {}) => {
   })
 
   router.post('/register', (req, res, next) => {
-    const { email, password } = req.body
-    const user = { email }
-    passwords.hash(email, password)
-      .then(hash => {
-        user.password = hash
-        signupFields.forEach(field => {
-          user[field.name] = req.body[field.name]
-        })
+    const { body } = req
+    users.register(body)
+      .then(user => {
         return redirect(user)
           .then(url => res.redirect(url))
       })
@@ -94,7 +120,18 @@ exports.createRouter = (config = {}) => {
   })
 
   router.post('/resetpassword', (req, res, next) => {
-    res.send('hello reset password')
+    const { email } = req.body
+    users.forgotPassword(email)
+      .then(() => {
+        res.redirect(req.baseUrl + req.path + '?info=RESET_LINK_SENT')
+      })
+      .catch(next)
+  })
+
+  router.use((err, req, res, next) => {
+    return err.handled
+      ? res.redirect(req.baseUrl + req.path + '?error=' + err.message)
+      : next(err)
   })
 
   return router

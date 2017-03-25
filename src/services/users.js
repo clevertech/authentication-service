@@ -1,6 +1,8 @@
 const passwords = require('../utils/passwords')
+const constants = require('../constants')
 const querystring = require('querystring')
 const uuid = require('uuid/v4')
+const _ = require('lodash')
 
 const random = () => require('crypto').randomBytes(16).toString('hex')
 const createToken = () => {
@@ -15,6 +17,8 @@ const reject = reason => {
   err.handled = true
   return Promise.reject(err)
 }
+
+const availableFieldNames = Object.keys(constants.availableFields)
 
 module.exports = (env, jwt, database, sendEmail) => {
   const baseUrl = env('BASE_URL')
@@ -42,8 +46,8 @@ module.exports = (env, jwt, database, sendEmail) => {
           }
         })
         .then(() => {
-          delete params.provider // TODO: _.pick()
-          return database.insertUser(Object.assign({}, params, {
+          const user = _.pick(params, ['email', 'password'].concat(availableFieldNames))
+          return database.insertUser(Object.assign({}, user, {
             id,
             emailConfirmationToken
           }))

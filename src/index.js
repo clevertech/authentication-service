@@ -56,10 +56,10 @@ exports.createRouter = (config = {}) => {
     .filter(name => constants.availableFields[name])
     .map(name => Object.assign({ name }, constants.availableFields[name]))
   const redirect = (payload) =>
-    jwt.sign(payload).then(token => redirectUrl + '?jwt=' + token)
+    jwt.sign(payload, { expiresIn: '1h' }).then(token => redirectUrl + '?jwt=' + token)
 
   const signupRedirect = (payload) =>
-    jwt.sign(payload).then(token => baseUrl + '/register?provider=' + token)
+    jwt.sign(payload, { expiresIn: '1h' }).then(token => baseUrl + '/register?provider=' + token)
 
   const providerSignup = user =>
     database.findUserByProviderLogin(user.login)
@@ -189,8 +189,7 @@ exports.createRouter = (config = {}) => {
   return router
 }
 
-exports.standaloneApp = () => {
-  const config = process.env
+exports.startServer = (config, callback) => {
   const env = require('./utils/env')(config)
   const jwt = require('./utils/jwt')(env)
   const app = express()
@@ -221,12 +220,12 @@ exports.standaloneApp = () => {
     res.redirect('/auth/signin')
   })
 
-  app.listen(port, () => {
-    winston.info('NODE_ENV: ' + process.env.NODE_ENV)
-    winston.info(`Listening on port ${port}! Visit http://127.0.0.1:${port}/auth`)
-  })
+  return app.listen(port, callback)
 }
 
 if (require.main === module) {
-  exports.standaloneApp()
+  const server = exports.startServer({}, () => {
+    const port = server.address().port
+    winston.info(`Listening on port ${port}! Visit http://127.0.0.1:${port}/auth`)
+  })
 }

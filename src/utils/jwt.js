@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 
-module.exports = (env) => {
+module.exports = env => {
   const algorithm = env('JWT_ALGORITHM')
   const isHMAC = algorithm.substring(0, 1) === 'H'
   const secretOrPrivateKey = isHMAC ? env('JWT_SECRET') : env('JWT_PRIVATE_KEY')

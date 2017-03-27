@@ -55,13 +55,13 @@
 
   <% if (error) { %>
     <div class="ui negative message" style="margin: 20px">
-      <p><%= error %></p>
+      <p><%= __(error) %></p>
     </div>
   <% } %>
 
   <% if (info) { %>
     <div class="ui positive message" style="margin: 20px">
-      <p><%= info %></p>
+      <p><%= __(info) %></p>
     </div>
   <% } %>
 
@@ -191,6 +191,35 @@
             </div>
           </div>
           <button type="submit" class="ui fluid large teal submit button">Send reset instructions</button>
+        </div>
+
+        <div class="ui error message"></div>
+
+      </form>
+
+      <div class="ui message">
+        <p>Already have an account? <a href="<%= baseUrl %>/signin" data-push='signin'>Sign In</a></p>
+        <p>New to us? <a href="<%= baseUrl %>/register" data-push='register'>Register</a></p>
+      </div>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="reset" style="display: <%= action === 'reset' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal image header">
+        <div class="content">
+          Reset your password
+        </div>
+      </h2>
+      <form class="ui large form" method="POST" action="<%= baseUrl %>/reset">
+        <input type="hidden" name="token" value="<%= token %>">
+        <div class="ui stacked segment">
+          <div class="field">
+            <div class="ui left icon input">
+              <i class="user icon"></i>
+              <input type="password" name="password" placeholder="New password">
+            </div>
+          </div>
+          <button type="submit" class="ui fluid large teal submit button">Set the new password</button>
         </div>
 
         <div class="ui error message"></div>

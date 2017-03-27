@@ -3,6 +3,16 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const winston = require('winston')
 const ejs = require('ejs')
+const emailService = require('pnp-email-service')
+const fetch = require('node-fetch')
+const useragent = require('useragent')
+const i18n = require('i18n')
+i18n.configure({
+  locales: ['en'],
+  defaultLocale: 'en',
+  directory: path.join(__dirname, '/locales'),
+  updateFiles: false
+})
 
 const constants = require('./constants')
 
@@ -15,12 +25,25 @@ const providers = {
 }
 
 exports.createRouter = (config = {}) => {
-  const sendEmail = (...args) => {
-    console.log('sendEmail', args)
-  }
   const env = require('./utils/env')(config)
   const jwt = require('./utils/jwt')(env)
   const database = require('./database/knex')(env)
+  const emailServer = emailService.startServer(config)
+  const sendEmail = (emailOptions, templateName, templateOptions) => {
+    const port = emailServer.address().port
+    const url = `http://0.0.0.0:${port}/email/send`
+    const body = { templateName, emailOptions, templateOptions }
+    return fetch(url, {
+      method: 'POST',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    // .then(res => res.text()).then(text => console.log(text))
+    .catch((err) => {
+      winston.error(err)
+      return Promise.reject(err)
+    })
+  }
   const users = require('./services/users')(env, jwt, database, sendEmail)
 
   database.init()
@@ -44,6 +67,7 @@ exports.createRouter = (config = {}) => {
 
   const router = express.Router()
   router.use(bodyParser.urlencoded({ extended: false }))
+  router.use(i18n.init)
 
   const availableProviders = Object.keys(providers).reduce((obj, provider) => {
     obj[provider] = providers[provider](router, providerSignup, env, database)
@@ -51,9 +75,19 @@ exports.createRouter = (config = {}) => {
   }, {})
   const someProvidersAvailable = Object.keys(availableProviders).length > 0
 
+  const client = req => {
+    const agent = useragent.lookup(req.headers['user-agent'])
+    return {
+      agent: agent.toAgent(),
+      os: agent.os.toString(),
+      device: agent.device.toString(),
+      ip: req.ip
+    }
+  }
+
   const renderIndex = (req, res, next, data) => {
     const { baseUrl, query } = req
-    const { error, info, provider } = query
+    const { error, info, provider, token } = query
     const filename = path.join(views, 'index.html')
     const allData = Object.assign({
       projectName,
@@ -63,7 +97,9 @@ exports.createRouter = (config = {}) => {
       baseUrl,
       error,
       info,
-      provider
+      provider,
+      token,
+      __: res.__
     }, data)
     const options = {}
     Promise.resolve()
@@ -89,7 +125,7 @@ exports.createRouter = (config = {}) => {
 
   router.post('/signin', (req, res, next) => {
     const { email, password } = req.body
-    users.login(email, password)
+    users.login(email, password, client(req))
       .then(user => redirect(user))
       .then(url => res.redirect(url))
       .catch(next)
@@ -104,7 +140,7 @@ exports.createRouter = (config = {}) => {
 
   router.post('/register', (req, res, next) => {
     const { body } = req
-    users.register(body)
+    users.register(body, client(req))
       .then(user => {
         return redirect(user)
           .then(url => res.redirect(url))
@@ -121,9 +157,25 @@ exports.createRouter = (config = {}) => {
 
   router.post('/resetpassword', (req, res, next) => {
     const { email } = req.body
-    users.forgotPassword(email)
+    users.forgotPassword(email, client(req))
       .then(() => {
         res.redirect(req.baseUrl + req.path + '?info=RESET_LINK_SENT')
+      })
+      .catch(next)
+  })
+
+  router.get('/reset', (req, res, next) => {
+    renderIndex(req, res, next, {
+      title: 'Reset your password',
+      action: 'reset'
+    })
+  })
+
+  router.post('/reset', (req, res, next) => {
+    const { token, password } = req.body
+    users.resetPassword(token, password, client(req))
+      .then(() => {
+        res.redirect(req.baseUrl + '/signin?info=PASSWORD_RESET')
       })
       .catch(next)
   })
@@ -163,6 +215,10 @@ exports.standaloneApp = () => {
         res.send('hey ' + JSON.stringify(info))
       })
       .catch(next)
+  })
+
+  app.all('*', (req, res, next) => {
+    res.redirect('/auth/signin')
   })
 
   app.listen(port, () => {

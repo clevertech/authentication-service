@@ -44,14 +44,12 @@ module.exports = (router, redirect, env) => {
         return request.get(options)
       })
       .then(([response, body]) => {
-        console.log('facebook response', body)
         const user = {
           firstName: body.first_name,
           lastName: body.last_name,
           email: body.email,
           login: 'facebook:' + body.id
         }
-        // TODO: redirect to signup to complete information
         return redirect(user).then(url => res.redirect(url))
       })
       .catch(next)

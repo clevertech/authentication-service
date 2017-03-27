@@ -1,0 +1,8 @@
+{
+  "INVALID_CREDENTIALS": "Invalid email or password",
+  "USER_ALREADY_EXISTS": "A user with that email address already exists",
+  "USER_NOT_FOUND": "User not found",
+  "EMAIL_CONFIRMATION_TOKEN_NOT_FOUND": "Email confirmation token expired or not found",
+  "RESET_LINK_SENT": "We have sent you an email with reset instructions. Check your inbox",
+  "PASSWORD_RESET": "Your password has been reset. Please sign in now"
+}

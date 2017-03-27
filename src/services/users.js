@@ -12,6 +12,14 @@ const createToken = () => {
 
 const normalizeEmail = email => email.toLowerCase()
 
+const userName = user => {
+  return user.name ||
+    user.firstName ||
+    user.lastName ||
+    user.username ||
+    user.email.substring(0, user.email.indexOf('@'))
+}
+
 const reject = reason => {
   const err = new Error(reason)
   err.handled = true
@@ -23,7 +31,7 @@ const availableFieldNames = Object.keys(constants.availableFields)
 module.exports = (env, jwt, database, sendEmail) => {
   const baseUrl = env('BASE_URL')
   return {
-    login (email, password) {
+    login (email, password, client) {
       email = normalizeEmail(email)
       return database.findUserByEmail(email)
         .then(user => {
@@ -32,7 +40,7 @@ module.exports = (env, jwt, database, sendEmail) => {
             .then(ok => ok ? user : reject('INVALID_CREDENTIALS'))
         })
     },
-    register (params) {
+    register (params, client) {
       const id = uuid()
       const email = normalizeEmail(params.email)
       const emailConfirmationToken = createToken()
@@ -64,30 +72,40 @@ module.exports = (env, jwt, database, sendEmail) => {
         .then(user => {
           sendEmail({ to: email }, 'welcome', {
             user,
-            link: process.env.BASE_URL + '/confirm?' + querystring.stringify({ emailConfirmationToken })
+            name: userName(user),
+            client,
+            link: baseUrl + '/confirm?' + querystring.stringify({ emailConfirmationToken })
           })
           return user
         })
     },
-    forgotPassword (email) {
+    forgotPassword (email, client) {
       email = normalizeEmail(email)
       const emailConfirmationToken = createToken()
       return database.findUserByEmail(email)
         .then(user => {
           if (!user) {
-            // TODO: just send an email with password-reset-help
-            return reject('USER_NOT_FOUND')
+            sendEmail({ to: email }, 'password_reset_help', {
+              emailAddress: email,
+              client,
+              tryDifferentEmailUrl: baseUrl + '/resetpassword'
+            })
+            return
           }
           const token = createToken()
           return database.updateUser({ id: user.id, emailConfirmationToken })
             .then(() => {
-              sendEmail({ to: user.email }, 'password-reset', {
+              sendEmail({ to: user.email }, 'password_reset', {
+                user,
+                name: userName(user),
+                client,
                 link: baseUrl + '/reset?' + querystring.stringify({ token })
               })
+              console.log('link', baseUrl + '/reset?' + querystring.stringify({ token }))
             })
         })
     },
-    resetPassword (token, password) {
+    resetPassword (token, password, client) {
       return database.findUserByEmailConfirmationToken(token)
         .then(user => {
           if (!user) return reject('EMAIL_CONFIRMATION_TOKEN_NOT_FOUND')

@@ -52,18 +52,29 @@ exports.createRouter = (config = {}) => {
   const baseUrl = env('BASE_URL')
   const projectName = env('PROJECT_NAME')
   const redirectUrl = env('REDIRECT_URL')
+  const emailConfirmation = env('EMAIL_CONFIRMATION', 'true') === 'true'
+  const emailConfirmationProviders = emailConfirmation && env('EMAIL_CONFIRMATION_PROVIDERS', 'true') === 'true'
   const signupFields = env('SIGNUP_FIELDS', '').split(',')
     .filter(name => constants.availableFields[name])
     .map(name => Object.assign({ name }, constants.availableFields[name]))
-  const redirect = (payload) =>
-    jwt.sign(payload, { expiresIn: '1h' }).then(token => redirectUrl + '?jwt=' + token)
+  const redirect = (user) =>
+    jwt.sign({ user }, { expiresIn: '1h' }).then(token => redirectUrl + '?jwt=' + token)
 
-  const signupRedirect = (payload) =>
-    jwt.sign(payload, { expiresIn: '1h' }).then(token => baseUrl + '/register?provider=' + token)
+  const signupRedirect = (user) =>
+    jwt.sign({ user }, { expiresIn: '1h' }).then(token => baseUrl + '/register?provider=' + token)
 
-  const providerSignup = user =>
-    database.findUserByProviderLogin(user.login)
-      .then(existingUser => existingUser ? redirect(existingUser) : signupRedirect(user))
+  const providerSignup = user => {
+    return database.findUserByProviderLogin(user.login)
+      .then(existingUser => {
+        if (existingUser) {
+          if (!emailConfirmationProviders || existingUser.emailConfirmed) {
+            return redirect(existingUser)
+          }
+          return baseUrl + '/signin?error=EMAIL_CONFIRMATION_REQUIRED'
+        }
+        return signupRedirect(user)
+      })
+  }
 
   const router = express.Router()
   router.use(bodyParser.urlencoded({ extended: false }))
@@ -104,8 +115,8 @@ exports.createRouter = (config = {}) => {
     const options = {}
     Promise.resolve()
       .then(() => provider ? jwt.verify(provider) : {})
-      .then(userInfo => {
-        Object.assign(allData, { userInfo })
+      .then(data => {
+        Object.assign(allData, { userInfo: data.user || {} })
         ejs.renderFile(filename, allData, options, (err, html) => {
           err ? next(err) : res.type('html').send(html)
         })
@@ -126,8 +137,13 @@ exports.createRouter = (config = {}) => {
   router.post('/signin', (req, res, next) => {
     const { email, password } = req.body
     users.login(email, password, client(req))
-      .then(user => redirect(user))
-      .then(url => res.redirect(url))
+      .then(user => {
+        if (emailConfirmation && !user.emailConfirmed) {
+          return res.redirect(req.baseUrl + '/signin?error=EMAIL_CONFIRMATION_REQUIRED')
+        }
+        return redirect(user)
+          .then(url => res.redirect(url))
+      })
       .catch(next)
   })
 
@@ -142,6 +158,12 @@ exports.createRouter = (config = {}) => {
     const { body } = req
     users.register(body, client(req))
       .then(user => {
+        if (emailConfirmation && user.password) {
+          return res.redirect(req.baseUrl + '/signin?info=EMAIL_CONFIRMATION_SENT')
+        }
+        if (emailConfirmationProviders && !user.password) {
+          return res.redirect(req.baseUrl + '/signin?info=EMAIL_CONFIRMATION_SENT')
+        }
         return redirect(user)
           .then(url => res.redirect(url))
       })

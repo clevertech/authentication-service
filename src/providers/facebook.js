@@ -42,15 +42,16 @@ module.exports = (router, redirect, env) => {
           json: true
         }
         return request.get(options)
-      })
-      .then(([response, body]) => {
-        const user = {
-          firstName: body.first_name,
-          lastName: body.last_name,
-          email: body.email,
-          login: 'facebook:' + body.id
-        }
-        return redirect(user).then(url => res.redirect(url))
+          .then(([response, body]) => {
+            const user = {
+              firstName: body.first_name,
+              lastName: body.last_name,
+              email: body.email,
+              login: 'facebook:' + body.id,
+              data: { access_token }
+            }
+            return redirect(user).then(url => res.redirect(url))
+          })
       })
       .catch(next)
   })

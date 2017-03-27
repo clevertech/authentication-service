@@ -5,5 +5,7 @@
   "EMAIL_CONFIRMATION_TOKEN_NOT_FOUND": "Email confirmation token expired or not found",
   "RESET_LINK_SENT": "We have sent you an email with reset instructions. Check your inbox",
   "PASSWORD_RESET": "Your password has been reset. Please sign in now",
-  "PASSWORD_REQUIRED": "Choose a password"
+  "PASSWORD_REQUIRED": "Choose a password",
+  "EMAIL_CONFIRMATION_REQUIRED": "You need to confirm your email first. Please, check your inbox",
+  "EMAIL_CONFIRMATION_SENT": "Before signing in, please confirm your email address. Check your inbox and follow the instructions"
 }

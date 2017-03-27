@@ -9,7 +9,6 @@ test('sign and verify', t => {
   return jwt.sign({ foo: 'bar' })
     .then(response => jwt.verify(response))
     .then(data => {
-      console.log('response', data)
       t.is(data.foo, 'bar')
     })
 })

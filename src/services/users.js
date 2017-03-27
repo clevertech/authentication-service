@@ -54,17 +54,18 @@ module.exports = (env, jwt, database, sendEmail) => {
               }
             })
             .then(() => {
-              if (params.provider) {
-                return jwt.verify(params.provider)
-                  .then(userInfo => {
-                    return database.insertProvider({ userId: id, login: userInfo.login, data: {} })
+              return (params.provider ? jwt.verify(params.provider) : Promise.resolve())
+                .then(userInfo => {
+                  const user = _.pick(params, ['email', 'password'].concat(availableFieldNames))
+                  return database.insertUser(Object.assign({}, user, {
+                    id,
+                    emailConfirmationToken
+                  }))
+                  .then(() => {
+                    const user = userInfo && userInfo.user
+                    if (user) return database.insertProvider({ userId: id, login: user.login, data: user.data || {} })
                   })
-              }
-              const user = _.pick(params, ['email', 'password'].concat(availableFieldNames))
-              return database.insertUser(Object.assign({}, user, {
-                id,
-                emailConfirmationToken
-              }))
+                })
             })
             .then(() => database.findUserByEmail(email))
             .then(user => {

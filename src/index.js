@@ -52,6 +52,8 @@ exports.createRouter = (config = {}) => {
   const baseUrl = env('BASE_URL')
   const projectName = env('PROJECT_NAME')
   const redirectUrl = env('REDIRECT_URL')
+  const termsAndConditions = env('TERMS_AND_CONDITIONS')
+  const stylesheet = env('STYLESHEET', baseUrl + '/stylesheet.css')
   const emailConfirmation = env('EMAIL_CONFIRMATION', 'true') === 'true'
   const emailConfirmationProviders = emailConfirmation && env('EMAIL_CONFIRMATION_PROVIDERS', 'true') === 'true'
   const signupFields = env('SIGNUP_FIELDS', '').split(',')
@@ -110,6 +112,8 @@ exports.createRouter = (config = {}) => {
       info,
       provider,
       token,
+      termsAndConditions,
+      stylesheet,
       __: res.__
     }, data)
     const options = {}
@@ -202,10 +206,37 @@ exports.createRouter = (config = {}) => {
       .catch(next)
   })
 
+  router.get('/changepassword', (req, res, next) => {
+    renderIndex(req, res, next, {
+      title: 'Change your password',
+      action: 'changepassword'
+    })
+  })
+
+  router.post('/changepassword', (req, res, next) => {
+    res.send('WIP')
+  })
+
+  router.get('/changeemail', (req, res, next) => {
+    renderIndex(req, res, next, {
+      title: 'Change your email address',
+      action: 'changeemail'
+    })
+  })
+
+  router.post('/changeemail', (req, res, next) => {
+    res.send('WIP')
+  })
+
+  const stylesheetFullPath = path.join(__dirname, '../static/stylesheet.css')
+  router.get('/stylesheet.css', (req, res, next) => {
+    res.sendFile(stylesheetFullPath, {}, err => err && next(err))
+  })
+
   router.use((err, req, res, next) => {
-    return err.handled
-      ? res.redirect(req.baseUrl + req.path + '?error=' + err.message)
-      : next(err)
+    const message = err.handled ? err.message : 'INTERNAL_ERROR'
+    res.redirect(req.baseUrl + req.path + '?error=' + message)
+    if (!err.handled) winston.error(err)
   })
 
   return router

@@ -24,6 +24,7 @@ const availableFieldNames = Object.keys(constants.availableFields)
 
 module.exports = (env, jwt, database, sendEmail) => {
   const baseUrl = env('BASE_URL')
+  const projectName = env('PROJECT_NAME')
   const random = () => require('crypto').randomBytes(16).toString('hex')
   const createToken = () => {
     return jwt.sign({ code: random() }, { expiresIn: '24h' })
@@ -73,6 +74,7 @@ module.exports = (env, jwt, database, sendEmail) => {
                 user,
                 name: userName(user),
                 client,
+                projectName,
                 link: baseUrl + '/confirm?' + querystring.stringify({ emailConfirmationToken })
               })
               return user
@@ -89,6 +91,7 @@ module.exports = (env, jwt, database, sendEmail) => {
                 sendEmail({ to: email }, 'password_reset_help', {
                   emailAddress: email,
                   client,
+                  projectName,
                   tryDifferentEmailUrl: baseUrl + '/resetpassword'
                 })
                 return
@@ -99,6 +102,7 @@ module.exports = (env, jwt, database, sendEmail) => {
                     user,
                     name: userName(user),
                     client,
+                    projectName,
                     link: baseUrl + '/reset?' + querystring.stringify({ emailConfirmationToken })
                   })
                   // console.log('link', baseUrl + '/reset?' + querystring.stringify({ emailConfirmationToken }))

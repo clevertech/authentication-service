@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>Welcome to [Product Name], <%= name %>!</title>
+    <title>Welcome to <%= projectName %>, <%= name %>!</title>
     <!--
     The style block is collapsed on page load to save you some scrolling.
     Postmark automatically inlines all CSS properties for maximum email client
@@ -388,7 +388,7 @@
     </style>
   </head>
   <body>
-    <span class="preheader">Thanks for trying out [Product Name]. We’ve pulled together some information and resources to help you get started.</span>
+    <span class="preheader">Thanks for trying out <%= projectName %>. We’ve pulled together some information and resources to help you get started.</span>
     <table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td align="center">
@@ -396,7 +396,7 @@
             <tr>
               <td class="email-masthead">
                 <a href="https://example.com" class="email-masthead_name">
-        [Product Name]
+        <%= projectName %>
       </a>
               </td>
             </tr>
@@ -408,8 +408,8 @@
                   <tr>
                     <td class="content-cell">
                       <h1>Welcome, <%= name %>!</h1>
-                      <p>Thanks for trying [Product Name]. We’re thrilled to have you on board.</p>
-                      <p>To get the most out of [Product Name], do this primary next step:</p>
+                      <p>Thanks for trying <%= projectName %>. We’re thrilled to have you on board.</p>
+                      <p>To get the most out of <%= projectName %>, do this primary next step:</p>
                       <!-- Action -->
                       <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0">
                         <tr>
@@ -451,7 +451,7 @@
                 <table class="email-footer" align="center" width="570" cellpadding="0" cellspacing="0">
                   <tr>
                     <td class="content-cell" align="center">
-                      <p class="sub align-center">&copy; 2017 [Product Name]. All rights reserved.</p>
+                      <p class="sub align-center">&copy; 2017 <%= projectName %>. All rights reserved.</p>
                       <p class="sub align-center">
                         [Company Name, LLC]
                         <br>1234 Street Rd.

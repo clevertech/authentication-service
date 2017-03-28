@@ -9,53 +9,6 @@
   <link rel="stylesheet" href="<%= stylesheet %>">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.7/semantic.min.js"></script>
-  <style type="text/css">
-    body {
-      background-color: #DADADA;
-    }
-
-    body > .grid {
-      height: 100%;
-    }
-
-    .image {
-      margin-top: -100px;
-    }
-
-    .column {
-      max-width: 450px;
-    }
-
-    .submit.button {
-      margin-bottom: 5px
-    }
-    .button.google, .button.google:hover {
-      background-color: #DB402C;
-      color: white
-    }
-    .button.facebook, .button.facebook:hover {
-      background-color: #324D8F;
-      color: white
-    }
-    .button.github, .button.github:hover {
-      background-color: #3C3C3C;
-      color: white
-    }
-    .button.linkedin, .button.linkedin:hover {
-      background-color: #263E58;
-      color: white
-    }
-    .button.twitter, .button.twitter:hover {
-      background-color: #1EA1F1;
-      color: white
-    }
-    .field {
-      text-align: left;
-    }
-    .ui.form .field > label {
-      display: none;
-    }
-  </style>
 </head>
 <body>
 
@@ -314,11 +267,6 @@
         <div class="ui error message"></div>
 
       </form>
-
-      <div class="ui message">
-        <p>Already have an account? <a href="<%= baseUrl %>/signin" data-push='signin'>Sign In</a></p>
-        <p>New to us? <a href="<%= baseUrl %>/register" data-push='register'>Register</a></p>
-      </div>
     </div>
   </div>
   <script>

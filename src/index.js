@@ -14,8 +14,6 @@ i18n.configure({
   updateFiles: false
 })
 
-const constants = require('./constants')
-
 const providers = {
   google: require('./providers/google'),
   twitter: require('./providers/twitter'),
@@ -27,6 +25,7 @@ const providers = {
 exports.createRouter = (config = {}) => {
   const env = require('./utils/env')(config)
   const jwt = require('./utils/jwt')(env)
+  const validations = require('./validations')(env)
   const database = require('./database/knex')(env)
   const emailServer = emailService.startServer(config)
   const sendEmail = (emailOptions, templateName, templateOptions) => {
@@ -52,13 +51,9 @@ exports.createRouter = (config = {}) => {
   const baseUrl = env('BASE_URL')
   const projectName = env('PROJECT_NAME')
   const redirectUrl = env('REDIRECT_URL')
-  const termsAndConditions = env('TERMS_AND_CONDITIONS')
   const stylesheet = env('STYLESHEET', baseUrl + '/stylesheet.css')
   const emailConfirmation = env('EMAIL_CONFIRMATION', 'true') === 'true'
   const emailConfirmationProviders = emailConfirmation && env('EMAIL_CONFIRMATION_PROVIDERS', 'true') === 'true'
-  const signupFields = env('SIGNUP_FIELDS', '').split(',')
-    .filter(name => constants.availableFields[name])
-    .map(name => Object.assign({ name }, constants.availableFields[name]))
   const redirect = (user) =>
     jwt.sign({ user }, { expiresIn: '1h' }).then(token => redirectUrl + '?jwt=' + token)
 
@@ -101,6 +96,7 @@ exports.createRouter = (config = {}) => {
   const renderIndex = (req, res, next, data) => {
     const { baseUrl, query } = req
     const { error, info, provider, token } = query
+    const { signupFields, termsAndConditions } = validations
     const filename = path.join(views, 'index.html')
     const allData = Object.assign({
       projectName,
@@ -114,6 +110,7 @@ exports.createRouter = (config = {}) => {
       token,
       termsAndConditions,
       stylesheet,
+      forms: validations.forms(provider),
       __: res.__
     }, data)
     const options = {}

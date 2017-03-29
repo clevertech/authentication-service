@@ -8,15 +8,23 @@ body > .grid {
   height: 100%;
 }
 
-.image {
-  margin-top: -100px;
+body > .ui.message:first-child {
+  margin: 20px;
+  text-align: center;
+}
+
+.ui.image {
+  margin: 0 auto;
+  margin-bottom: 20px;
+  width: 150px;
+  height: 150px;
 }
 
 .column {
   max-width: 450px;
 }
 
-.submit.button {
+a.ui.button {
   margin-bottom: 5px
 }
 .button.google, .button.google:hover {
@@ -44,4 +52,7 @@ body > .grid {
 }
 .ui.form .field > label {
   display: none;
+}
+.ui.message {
+  font-size: 0.9em;
 }

@@ -8,16 +8,15 @@ module.exports = env => {
     connection: env('PG_CONNECTION_STRING'), // process.env.PG_CONNECTION_STRING,
     searchPath: 'knex,public'
   })
-  const schema = db.schema
   const fieldNames = Object.keys(constants.availableFields)
 
   const last = result => Array.isArray(result) ? result[result.length - 1] : result
 
   const createTableIfNotExists = (tableName, callback) => {
     callback = _.once(callback)
-    return schema.hasTable(tableName).then(last)
+    return db.schema.hasTable(tableName)
       .then((tableExists) => {
-        return schema.createTableIfNotExists(tableName, table => !tableExists ? callback(table) : void 0)
+        return db.schema.createTableIfNotExists(tableName, table => !tableExists ? callback(table) : void 0)
       })
   }
 
@@ -25,11 +24,11 @@ module.exports = env => {
     init () {
       return Promise.resolve()
         .then(() => {
-          return schema.hasTable('auth_users')
+          return db.schema.hasTable('auth_users')
             .then((tableExists) => {
               return fieldNames.reduce((prom, fieldName) => {
                 return prom.then((missing) => {
-                  return schema.hasColumn('auth_users', fieldName).then(last)
+                  return db.schema.hasColumn('auth_users', fieldName)
                     .then(exists => {
                       if (!exists) missing.push(fieldName)
                       return missing
@@ -37,7 +36,7 @@ module.exports = env => {
                 })
               }, Promise.resolve([]))
               .then((missing) => {
-                return schema.createTableIfNotExists('auth_users', _.once(table => {
+                return db.schema.createTableIfNotExists('auth_users', _.once(table => {
                   if (!tableExists) {
                     table.uuid('id').primary()
                     table.string('email').notNullable().unique()
@@ -45,6 +44,8 @@ module.exports = env => {
                     table.string('password').nullable()
                     table.boolean('emailConfirmed').notNullable().defaultTo(false)
                     table.string('emailConfirmationToken').nullable().unique()
+                    table.string('image').nullable()
+                    table.string('termsAndConditions').nullable()
                     table.timestamps()
                   }
                   missing.forEach(fieldName => table.string(fieldName))

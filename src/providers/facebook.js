@@ -1,6 +1,7 @@
 const querystring = require('querystring')
 const pify = require('pify')
 const request = pify(require('request'), { multiArgs: true })
+const _ = require('lodash')
 
 module.exports = (router, redirect, env) => {
   const baseUrl = env('BASE_URL')
@@ -32,8 +33,8 @@ module.exports = (router, redirect, env) => {
     request({ url: base + query, json: true })
       .then(([response, body]) => {
         const { access_token } = body
-        var url = 'https://graph.facebook.com/v2.8/me'
-        var options = {
+        const url = 'https://graph.facebook.com/v2.8/me'
+        const options = {
           url,
           qs: {
             access_token,
@@ -43,14 +44,30 @@ module.exports = (router, redirect, env) => {
         }
         return request.get(options)
           .then(([response, body]) => {
-            const user = {
-              firstName: body.first_name,
-              lastName: body.last_name,
-              email: body.email,
-              login: 'facebook:' + body.id,
-              data: { access_token }
-            }
-            return redirect(user).then(url => res.redirect(url))
+            return Promise.resolve()
+              .then(() => {
+                if (_.get(body, 'picture.data.is_silhouette') !== false) return
+                const options = {
+                  url: 'https://graph.facebook.com/v2.8/me/picture',
+                  qs: { access_token, height: 160 },
+                  followRedirect: false,
+                  json: true
+                }
+                return request.get(options).then(([response, body]) => response.headers.location)
+              })
+              .then(image => {
+                const user = {
+                  firstName: body.first_name,
+                  lastName: body.last_name,
+                  email: body.email,
+                  image,
+                  login: 'facebook:' + body.id,
+                  icon: 'facebook',
+                  description: [body.first_name, body.last_name].filter(Boolean).join(' '),
+                  data: { access_token }
+                }
+                return redirect(user).then(url => res.redirect(url))
+              })
           })
       })
       .catch(next)

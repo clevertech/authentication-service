@@ -57,7 +57,7 @@ module.exports = (env, jwt, database, sendEmail) => {
             .then(() => {
               return (params.provider ? jwt.verify(params.provider) : Promise.resolve())
                 .then(userInfo => {
-                  const user = _.pick(params, ['email', 'password'].concat(availableFieldNames))
+                  const user = _.pick(params, ['email', 'password', 'image', 'termsAndConditions'].concat(availableFieldNames))
                   return database.insertUser(Object.assign({}, user, {
                     id,
                     emailConfirmationToken

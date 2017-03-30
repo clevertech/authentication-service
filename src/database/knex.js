@@ -5,7 +5,7 @@ const _ = require('lodash')
 module.exports = env => {
   const db = knex({
     client: 'pg',
-    connection: env('PG_CONNECTION_STRING'), // process.env.PG_CONNECTION_STRING,
+    connection: env('DATABASE_URL'),
     searchPath: 'knex,public'
   })
   const fieldNames = Object.keys(constants.availableFields)

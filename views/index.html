@@ -1,0 +1,309 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title><%= projectName %> | <%= title %> </title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="<%= stylesheet %>">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.7/semantic.min.js"></script>
+</head>
+<body>
+
+  <% if (error) { %>
+    <div class="ui negative message">
+      <p><%= error === __(error) ? __('UNKNOWN_ERROR') : __(error) %></p>
+    </div>
+  <% } %>
+
+  <% if (info && info !== __(info)) { %>
+    <div class="ui positive message">
+      <p><%= __(info) %></p>
+    </div>
+  <% } %>
+
+  <div class="ui middle aligned center aligned grid" data-action="signin" style="display: <%= action === 'signin' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          Log-in to your account
+        </div>
+      </h2>
+      <form class="ui large form left aligned" method="POST" action="<%= baseUrl %>/signin">
+        <div class="ui stacked segment">
+          <div class="required field">
+            <label>E-mail address</label>
+            <div class="ui left icon input">
+              <i class="at icon"></i>
+              <input type="text" name="email" placeholder="E-mail address">
+            </div>
+          </div>
+          <div class="required field">
+            <label>Password</label>
+            <div class="ui left icon input">
+              <i class="lock icon"></i>
+              <input type="password" name="password" placeholder="Password">
+            </div>
+          </div>
+          <button type="submit" class="ui fluid large teal submit button">Login</button>
+          <% if (someProvidersAvailable) { %> <p>or</p> <% } %>
+          <% if (availableProviders.google) { %>
+            <a href="<%= baseUrl %>/provider/google" class="ui fluid large google button"><i class="google icon"></i> Connect with Google</a>
+          <% } %>
+          <% if (availableProviders.facebook) { %>
+            <a href="<%= baseUrl %>/provider/facebook" class="ui fluid large facebook button"><i class="facebook icon"></i> Connect with Facebook</a>
+          <% } %>
+          <% if (availableProviders.github) { %>
+            <a href="<%= baseUrl %>/provider/github" class="ui fluid large github button"><i class="github icon"></i> Connect with GitHub</a>
+          <% } %>
+          <% if (availableProviders.linkedin) { %>
+            <a href="<%= baseUrl %>/provider/linkedin" class="ui fluid large linkedin button"><i class="linkedin icon"></i> Connect with LinkedIn</a>
+          <% } %>
+          <% if (availableProviders.twitter) { %>
+            <a href="<%= baseUrl %>/provider/twitter" class="ui fluid large twitter button"><i class="twitter icon"></i> Connect with Twitter</a>
+          <% } %>
+        </div>
+
+        <div class="ui error message"></div>
+
+      </form>
+
+      <div class="ui message">
+        <p>New to us? <a href="<%= baseUrl %>/register" data-push='register'>Register</a></p>
+        <p>Forgot password? <a href="<%= baseUrl %>/resetpassword" data-push='resetpassword'>Request a password reset</a></p>
+      </div>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="register" style="display: <%= action === 'register' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          Register a new account
+        </div>
+      </h2>
+      <form class="ui large form" method="POST" action="<%= baseUrl %>/register">
+        <input type="hidden" name="provider" value="<%= provider %>">
+        <div class="ui stacked segment">
+          <% if (userInfo.image) { %>
+            <img class="ui circular image" src="<%= userInfo.image %>">
+            <input type="hidden" name="image" value="<%= userInfo.image %>">
+          <% } %>
+          <% if (userInfo.icon && userInfo.description) { %>
+            <p><i class="<%= userInfo.icon %> icon"></i> <%= userInfo.description %></p>
+          <% } %>
+          <% for (const field of signupFields) { %>
+          <div class="required field">
+            <label><%= field.description %></label>
+            <div class="ui left icon input">
+              <i class="<%= field.icon %> icon"></i>
+              <input type="<%= field.type %>" name="<%= field.name %>" placeholder="<%= field.description %>" value="<%= userInfo[field.name] %>">
+            </div>
+          </div>
+          <% } %>
+          <div class="required field">
+            <label>E-mail address</label>
+            <div class="ui left icon input">
+              <i class="at icon"></i>
+              <input type="email" name="email" placeholder="E-mail address" value="<%= userInfo.email %>">
+            </div>
+          </div>
+          <% if (!provider) { %>
+          <div class="required field">
+            <label>Password</label>
+            <div class="ui left icon input">
+              <i class="lock icon"></i>
+              <input type="password" name="password" placeholder="Password">
+            </div>
+          </div>
+          <% } %>
+          <% if (termsAndConditions) { %>
+          <div class="field">
+            <div class="ui checkbox">
+              <input type="checkbox" name="termsAndConditions" tabindex="0" value="<%= termsAndConditions %>">
+              <label>I agree to the <a href="<%= termsAndConditions %>" target="_blank">Terms and Conditions</a></label>
+            </div>
+          </div>
+          <% } %>
+          <button type="submit" class="ui fluid large teal submit button">Register</button>
+          <% if (!provider) { %>
+          <% if (someProvidersAvailable) { %> <p>or</p> <% } %>
+          <% if (availableProviders.google) { %>
+            <a href="<%= baseUrl %>/provider/google" class="ui fluid large google button"><i class="google icon"></i> Connect with Google</a>
+          <% } %>
+          <% if (availableProviders.facebook) { %>
+            <a href="<%= baseUrl %>/provider/facebook" class="ui fluid large facebook button"><i class="facebook icon"></i> Connect with Facebook</a>
+          <% } %>
+          <% if (availableProviders.github) { %>
+            <a href="<%= baseUrl %>/provider/github" class="ui fluid large github button"><i class="github icon"></i> Connect with GitHub</a>
+          <% } %>
+          <% if (availableProviders.linkedin) { %>
+            <a href="<%= baseUrl %>/provider/linkedin" class="ui fluid large linkedin button"><i class="linkedin icon"></i> Connect with LinkedIn</a>
+          <% } %>
+          <% if (availableProviders.twitter) { %>
+            <a href="<%= baseUrl %>/provider/twitter" class="ui fluid large twitter button"><i class="twitter icon"></i> Connect with Twitter</a>
+          <% } %>
+          <% } %>
+        </div>
+
+        <div class="ui error message"></div>
+
+      </form>
+
+      <div class="ui message">
+        <p>Already have an account? <a href="<%= baseUrl %>/signin" data-push='signin'>Sign In</a></p>
+        <% if (provider) { %>
+        <p>Or <a href="<%= baseUrl %>/register">Register with another account</a></p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="resetpassword" style="display: <%= action === 'resetpassword' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          Reset your password
+        </div>
+      </h2>
+      <form class="ui large form" method="POST" action="<%= baseUrl %>/resetpassword">
+        <div class="ui stacked segment">
+          <div class="required field">
+            <label>E-mail address</label>
+            <div class="ui left icon input">
+              <i class="user icon"></i>
+              <input type="text" name="email" placeholder="E-mail address">
+            </div>
+          </div>
+          <button type="submit" class="ui fluid large teal submit button">Send reset instructions</button>
+        </div>
+
+        <div class="ui error message"></div>
+
+      </form>
+
+      <div class="ui message">
+        <p>Already have an account? <a href="<%= baseUrl %>/signin" data-push='signin'>Sign In</a></p>
+        <p>New to us? <a href="<%= baseUrl %>/register" data-push='register'>Register</a></p>
+      </div>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="reset" style="display: <%= action === 'reset' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          Reset your password
+        </div>
+      </h2>
+      <form class="ui large form" method="POST" action="<%= baseUrl %>/reset">
+        <input type="hidden" name="token" value="<%= token %>">
+        <div class="ui stacked segment">
+          <div class="required field">
+            <label>New password</label>
+            <div class="ui left icon input">
+              <i class="user icon"></i>
+              <input type="password" name="password" placeholder="New password">
+            </div>
+          </div>
+          <button type="submit" class="ui fluid large teal submit button">Set the new password</button>
+        </div>
+
+        <div class="ui error message"></div>
+
+      </form>
+
+      <div class="ui message">
+        <p>Already have an account? <a href="<%= baseUrl %>/signin" data-push='signin'>Sign In</a></p>
+        <p>New to us? <a href="<%= baseUrl %>/register" data-push='register'>Register</a></p>
+      </div>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="changepassword" style="display: <%= action === 'changepassword' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          Change your password
+        </div>
+      </h2>
+      <form class="ui large form" method="POST" action="<%= baseUrl %>/changepassword">
+        <input type="hidden" name="token" value="<%= token %>">
+        <div class="ui stacked segment">
+          <div class="required field">
+            <label>Old password</label>
+            <div class="ui left icon input">
+              <i class="lock icon"></i>
+              <input type="password" name="oldpassword" placeholder="Old password">
+            </div>
+          </div>
+          <div class="required field">
+            <label>New password</label>
+            <div class="ui left icon input">
+              <i class="lock icon"></i>
+              <input type="password" name="newpassword" placeholder="New password">
+            </div>
+          </div>
+          <button type="submit" class="ui fluid large teal submit button">Set the new password</button>
+        </div>
+
+        <div class="ui error message"></div>
+      </form>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="changeemail" style="display: <%= action === 'changeemail' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          Change your email address
+        </div>
+      </h2>
+      <form class="ui large form" method="POST" action="<%= baseUrl %>/changeemail">
+        <input type="hidden" name="token" value="<%= token %>">
+        <div class="ui stacked segment">
+          <div class="required field">
+            <label>New email address</label>
+            <div class="ui left icon input">
+              <i class="at icon"></i>
+              <input type="email" name="email" placeholder="New email address">
+            </div>
+          </div>
+          <div class="required field">
+            <label>Your password</label>
+            <div class="ui left icon input">
+              <i class="lock icon"></i>
+              <input type="password" name="password" placeholder="Your password">
+            </div>
+          </div>
+          <button type="submit" class="ui fluid large teal submit button">Change your email address</button>
+        </div>
+
+        <div class="ui error message"></div>
+
+      </form>
+    </div>
+  </div>
+  <script>
+    $(document).ready(function () {
+      $(document).on('click', '[data-push]', function (event) {
+        event.preventDefault()
+        var href = $(this).attr('href')
+        var action = $(this).attr('data-push')
+        $('[data-action]').css('display', 'none')
+        $('[data-action=' + action + ']').css('display', 'flex')
+        history.pushState({}, null, href)
+      })
+
+      var forms = <%- JSON.stringify(forms) %>
+
+      Object.keys(forms).forEach(function (key) {
+        $('[data-action=' + key + '] form').form(forms[key])
+      })
+
+      $('form').on('submit', function () {
+        var form = $(this)
+        var errors = $(this).find('.field.error')
+        if (errors.size() === 0) $(this).addClass('loading')
+      })
+    })
+  </script>
+</body>
+</html>

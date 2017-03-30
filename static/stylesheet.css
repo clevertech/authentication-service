@@ -1,0 +1,58 @@
+@import url('https://cdn.jsdelivr.net/semantic-ui/2.2.7/semantic.min.css');
+
+body {
+  background-color: #DADADA;
+}
+
+body > .grid {
+  height: 100%;
+}
+
+body > .ui.message:first-child {
+  margin: 20px;
+  text-align: center;
+}
+
+.ui.image {
+  margin: 0 auto;
+  margin-bottom: 20px;
+  width: 150px;
+  height: 150px;
+}
+
+.column {
+  max-width: 450px;
+}
+
+a.ui.button {
+  margin-bottom: 5px
+}
+.button.google, .button.google:hover {
+  background-color: #DB402C;
+  color: white
+}
+.button.facebook, .button.facebook:hover {
+  background-color: #324D8F;
+  color: white
+}
+.button.github, .button.github:hover {
+  background-color: #3C3C3C;
+  color: white
+}
+.button.linkedin, .button.linkedin:hover {
+  background-color: #263E58;
+  color: white
+}
+.button.twitter, .button.twitter:hover {
+  background-color: #1EA1F1;
+  color: white
+}
+.field {
+  text-align: left;
+}
+.ui.form .field > label {
+  display: none;
+}
+.ui.message {
+  font-size: 0.9em;
+}

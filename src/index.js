@@ -231,6 +231,15 @@ exports.createRouter = (config = {}) => {
     res.send('WIP')
   })
 
+  router.get('/confirm', (req, res, next) => {
+    const { emailConfirmationToken } = req.query
+    users.confirmEmail(emailConfirmationToken)
+      .then(() => {
+        res.redirect(req.baseUrl + '/signin?info=EMAIL_CONFIRMED')
+      })
+      .catch(next)
+  })
+
   const stylesheetFullPath = path.join(__dirname, '../static/stylesheet.css')
   router.get('/stylesheet.css', (req, res, next) => {
     res.sendFile(stylesheetFullPath, {}, err => err && next(err))
@@ -247,7 +256,6 @@ exports.createRouter = (config = {}) => {
 
 exports.startServer = (config, callback) => {
   const env = require('./utils/env')(config)
-  const jwt = require('./utils/jwt')(env)
   const app = express()
   const router = exports.createRouter(config)
   const port = +env('MICROSERVICE_PORT') || 3000
@@ -262,14 +270,6 @@ exports.startServer = (config, callback) => {
     res.type('text/plain')
     const pattern = process.env.ROBOTS_INDEX === 'true' ? '' : ' /'
     res.send(`User-agent: *\nDisallow:${pattern}\n`)
-  })
-
-  app.get('/callback', (req, res, next) => {
-    jwt.verify(req.query.jwt)
-      .then((info) => {
-        res.send('hey ' + JSON.stringify(info))
-      })
-      .catch(next)
   })
 
   app.all('*', (req, res, next) => {

@@ -9,5 +9,6 @@
   "EMAIL_CONFIRMATION_REQUIRED": "You need to confirm your email first. Please, check your inbox",
   "EMAIL_CONFIRMATION_SENT": "Before signing in, please confirm your email address. Check your inbox and follow the instructions",
   "INTERNAL_ERROR": "Internal error",
-  "UNKNOWN_ERROR": "Unknown error"
+  "UNKNOWN_ERROR": "Unknown error",
+  "EMAIL_CONFIRMED": "Thank you! Your email address is not confirmed. Please sign in"
 }

@@ -22,6 +22,12 @@ const providers = {
   github: require('./providers/github')
 }
 
+exports.createJwtClient = (config = {}) => {
+  const env = require('./utils/env')(config)
+  const jwt = require('./utils/jwt')(env)
+  return jwt
+}
+
 exports.createRouter = (config = {}) => {
   const env = require('./utils/env')(config)
   const jwt = require('./utils/jwt')(env)
@@ -244,7 +250,7 @@ exports.startServer = (config, callback) => {
   const jwt = require('./utils/jwt')(env)
   const app = express()
   const router = exports.createRouter(config)
-  const port = +env('PORT') || 3000
+  const port = +env('MICROSERVICE_PORT') || 3000
 
   app.use('/auth', router)
 

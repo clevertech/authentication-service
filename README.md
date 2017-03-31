@@ -131,3 +131,38 @@ AWS_KEY=xxxx
 AWS_SECRET=xxxx
 AWS_REGION=us-east-1
 ```
+
+## Security
+
+This microservice is intented to be very secure.
+
+### Forgot password functionality
+
+When an unknown email address is used in this functionality, an email is sent to that email address telling the user somebody tried to get access to that account. The email conteins information about the OS and browser versions used.
+
+This way:
+
+- We don't inform the attacker whether the account exists or not
+- The user is informed about an attempt to get access to the account
+
+### Passwords
+
+Passwords are hashed with a `kdf` derivation that uses the `scrypt` hash function that incorporates HMAC into its format. More information [here](https://security.stackexchange.com/questions/88678/why-does-node-js-scrypt-function-use-hmac-this-way/91050#91050). The email address is also used as an additional salt so it's impossible to swap the hash between two users.
+
+### JWT
+
+JWT is used for exchanging information between the microservice and your app. You can configure the JWT algorithm (check the configuration options above). You can choose between just hashing with HMAC or using private key algorithms such as RSA and ECDSA.
+
+JWT is also used for passing information around between some redirects. For example when a user signs up with Facebook and needs to accept the terms and conditions or confirm or fill more information to sign up. In that case the Facebook accessToken and other information is passed in the URL inside a JWT token.
+
+Email confirmation tokens are JWT tokens with a expiration date. This could be enough, but we also make the token contain a random value and we store it in the database. So one user can only have one confirmation token at a time and can be used only once.
+
+## To be done
+
+- Protection against brute force attacks slowing down the server response and adding reCAPTCHA:
+  - From same IP
+  - To the same login
+  - Using the same password
+- 2 Factor Authentication using SMS
+- Password strength calculator
+- Re-confirm email after long inactivity

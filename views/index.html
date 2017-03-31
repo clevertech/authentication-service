@@ -28,7 +28,7 @@
     <div class="column">
       <h2 class="ui teal header">
         <div class="content">
-          Log-in to your account
+          Sign in to your account
         </div>
       </h2>
       <form class="ui large form left aligned" method="POST" action="<%= baseUrl %>/signin">
@@ -171,8 +171,8 @@
           <div class="required field">
             <label>E-mail address</label>
             <div class="ui left icon input">
-              <i class="user icon"></i>
-              <input type="text" name="email" placeholder="E-mail address">
+              <i class="at icon"></i>
+              <input type="email" name="email" placeholder="E-mail address">
             </div>
           </div>
           <button type="submit" class="ui fluid large teal submit button">Send reset instructions</button>
@@ -291,6 +291,13 @@
         $('[data-action=' + action + ']').css('display', 'flex')
         history.pushState({}, null, href)
       })
+
+      window.onpopstate = function (event) {
+        var loc = document.location.href
+        var action = loc.substring(loc.lastIndexOf('/') + 1)
+        $('[data-action]').css('display', 'none')
+        $('[data-action=' + action + ']').css('display', 'flex')
+      }
 
       var forms = <%- JSON.stringify(forms) %>
 

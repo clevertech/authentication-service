@@ -56,6 +56,8 @@ app.get('/callback', (req, res, next) => {
 
 You can find a [full example here](https://github.com/gimenete/authentication-service-example/blob/master/index.js)
 
+That example application can be [tested online](https://pnp-authentication-service.herokuapp.com)
+
 ## Email integration
 
 Behind the scenes this microservice uses other microservice for sending emails [email service](https://github.com/clevertech/email-service). You will need to set up correctly its [configuration options](https://github.com/clevertech/email-service#configuration-options) such as:

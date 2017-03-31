@@ -88,6 +88,7 @@ All configuration options can be configured using ENV variables. If using it as 
 - `PROJECT_NAME` ENV variable
 
 This is the list of available configuration options:
+
 | Variable | Description |
 | --- | --- |
 | `SIGNUP_FIELDS` | List of additional fields for the sign up form separated by commas. Available values are: name, firstName, lastName, company, address, city, state, zip, country |

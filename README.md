@@ -147,7 +147,10 @@ This way:
 
 ### Passwords
 
-Passwords are hashed with a `kdf` derivation that uses the `scrypt` hash function that incorporates HMAC into its format. More information [here](https://security.stackexchange.com/questions/88678/why-does-node-js-scrypt-function-use-hmac-this-way/91050#91050). The email address is also used as an additional salt so it's impossible to swap the hash between two users.
+Passwords are hashed with a `kdf` derivation that uses the `scrypt` hash function that incorporates HMAC (protecting against length extension attacks) into its format. More information [here](https://security.stackexchange.com/questions/88678/why-does-node-js-scrypt-function-use-hmac-this-way/91050#91050). The email address is also used as an additional salt so
+
+- It's impossible to swap the hash between two users
+- A user can only change his email address knowing his password
 
 ### JWT
 
@@ -157,7 +160,7 @@ JWT is also used for passing information around between some redirects. For exam
 
 Email confirmation tokens are JWT tokens with a expiration date. This could be enough, but we also make the token contain a random value and we store it in the database. So one user can only have one confirmation token at a time and can be used only once.
 
-## To be done
+### To be done regarding security
 
 - Protection against brute force attacks slowing down the server response and adding reCAPTCHA:
   - From same IP

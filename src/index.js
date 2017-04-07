@@ -34,6 +34,7 @@ exports.createRouter = (config = {}) => {
   const env = require('./utils/env')(config)
   const jwt = require('./utils/jwt')(env)
   const validations = require('./validations')(env)
+  const recaptcha = require('./recaptcha')(env, fetch)
   const database = require('./database/knex')(env)
   const emailServer = emailService.startServer(config)
   const sendEmail = (emailOptions, templateName, templateOptions) => {
@@ -83,6 +84,7 @@ exports.createRouter = (config = {}) => {
 
   const router = express.Router()
   router.use(bodyParser.urlencoded({ extended: false }))
+  router.use(recaptcha.middleware())
   router.use(i18n.init)
 
   const availableProviders = Object.keys(providers).reduce((obj, provider) => {
@@ -119,6 +121,7 @@ exports.createRouter = (config = {}) => {
       termsAndConditions,
       stylesheet,
       forms: validations.forms(provider),
+      recaptchaSiteKey: recaptcha.siteKey(),
       __: res.__
     }, data)
     const options = {}

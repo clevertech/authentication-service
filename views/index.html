@@ -9,8 +9,25 @@
   <link rel="stylesheet" href="<%= stylesheet %>">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.7/semantic.min.js"></script>
+  <% if (recaptchaSiteKey) { %>
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+    <script>
+      function onSubmit (token) {
+        var input = $('<input type="hidden" name="g-recaptcha-response">')
+        input.val(token)
+        window.submitForm.append(input)
+        window.submitForm.get(0).submit()
+      }
+    </script>
+  <% } %>
 </head>
 <body>
+  <% if (recaptchaSiteKey) { %>
+    <div id='recaptcha' class="g-recaptcha"
+      data-sitekey="<%= recaptchaSiteKey %>"
+      data-callback="onSubmit"
+      data-size="invisible"></div>
+  <% } %>
 
   <% if (error) { %>
     <div class="ui negative message">
@@ -48,22 +65,7 @@
             </div>
           </div>
           <button type="submit" class="ui fluid large teal submit button">Login</button>
-          <% if (someProvidersAvailable) { %> <p>or</p> <% } %>
-          <% if (availableProviders.google) { %>
-            <a href="<%= baseUrl %>/provider/google" class="ui fluid large google button"><i class="google icon"></i> Connect with Google</a>
-          <% } %>
-          <% if (availableProviders.facebook) { %>
-            <a href="<%= baseUrl %>/provider/facebook" class="ui fluid large facebook button"><i class="facebook icon"></i> Connect with Facebook</a>
-          <% } %>
-          <% if (availableProviders.github) { %>
-            <a href="<%= baseUrl %>/provider/github" class="ui fluid large github button"><i class="github icon"></i> Connect with GitHub</a>
-          <% } %>
-          <% if (availableProviders.linkedin) { %>
-            <a href="<%= baseUrl %>/provider/linkedin" class="ui fluid large linkedin button"><i class="linkedin icon"></i> Connect with LinkedIn</a>
-          <% } %>
-          <% if (availableProviders.twitter) { %>
-            <a href="<%= baseUrl %>/provider/twitter" class="ui fluid large twitter button"><i class="twitter icon"></i> Connect with Twitter</a>
-          <% } %>
+          <%- include('./providers.html', { someProvidersAvailable, availableProviders }) %>
         </div>
 
         <div class="ui error message"></div>
@@ -130,22 +132,7 @@
           <% } %>
           <button type="submit" class="ui fluid large teal submit button">Register</button>
           <% if (!provider) { %>
-          <% if (someProvidersAvailable) { %> <p>or</p> <% } %>
-          <% if (availableProviders.google) { %>
-            <a href="<%= baseUrl %>/provider/google" class="ui fluid large google button"><i class="google icon"></i> Connect with Google</a>
-          <% } %>
-          <% if (availableProviders.facebook) { %>
-            <a href="<%= baseUrl %>/provider/facebook" class="ui fluid large facebook button"><i class="facebook icon"></i> Connect with Facebook</a>
-          <% } %>
-          <% if (availableProviders.github) { %>
-            <a href="<%= baseUrl %>/provider/github" class="ui fluid large github button"><i class="github icon"></i> Connect with GitHub</a>
-          <% } %>
-          <% if (availableProviders.linkedin) { %>
-            <a href="<%= baseUrl %>/provider/linkedin" class="ui fluid large linkedin button"><i class="linkedin icon"></i> Connect with LinkedIn</a>
-          <% } %>
-          <% if (availableProviders.twitter) { %>
-            <a href="<%= baseUrl %>/provider/twitter" class="ui fluid large twitter button"><i class="twitter icon"></i> Connect with Twitter</a>
-          <% } %>
+            <%- include('./providers.html', { someProvidersAvailable, availableProviders }) %>
           <% } %>
         </div>
 
@@ -307,10 +294,18 @@
         $('[data-action=' + key + '] form').form(forms[key])
       })
 
-      $('form').on('submit', function () {
+      $('form').on('submit', function (e) {
         var form = $(this)
         var errors = $(this).find('.field.error')
-        if (errors.size() === 0) $(this).addClass('loading')
+        if (errors.size() > 0) return
+        $(this).addClass('loading')
+        <% if (recaptchaSiteKey) { %>
+          if (form.find('[name=g-recaptcha-response]').size() === 0) {
+            window.submitForm = form
+            e.preventDefault()
+            grecaptcha.execute()
+          }
+        <% } %>
       })
     })
   </script>

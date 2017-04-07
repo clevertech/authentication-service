@@ -1,8 +1,11 @@
 const passwords = require('../utils/passwords')
-const constants = require('../constants')
 const querystring = require('querystring')
 const uuid = require('uuid/v4')
-const _ = require('lodash')
+
+let invalidHash = null
+passwords.hash('invalidEmail', 'anypasswordyoucanimagine')
+  .then(hash => (invalidHash = hash))
+  .catch(err => console.error(err))
 
 const normalizeEmail = email => email.toLowerCase()
 
@@ -20,9 +23,7 @@ const reject = reason => {
   return Promise.reject(err)
 }
 
-const availableFieldNames = Object.keys(constants.availableFields)
-
-module.exports = (env, jwt, database, sendEmail) => {
+module.exports = (env, jwt, database, sendEmail, validations) => {
   const baseUrl = env('BASE_URL')
   const projectName = env('PROJECT_NAME')
   const random = () => require('crypto').randomBytes(16).toString('hex')
@@ -35,9 +36,11 @@ module.exports = (env, jwt, database, sendEmail) => {
       email = normalizeEmail(email)
       return database.findUserByEmail(email)
         .then(user => {
-          if (!user) return reject('INVALID_CREDENTIALS') // TODO: simulate password check?
-          return passwords.check(email, password, user.password)
-            .then(ok => ok ? user : reject('INVALID_CREDENTIALS'))
+          // If the user does not exist, use the check function anyways
+          // to avoid timing attacks.
+          // See https://en.wikipedia.org/wiki/Timing_attack
+          return passwords.check(email, password, (user && user.password) || invalidHash)
+            .then(ok => user && ok ? user : reject('INVALID_CREDENTIALS'))
         })
     },
     register (params, client) {
@@ -57,7 +60,12 @@ module.exports = (env, jwt, database, sendEmail) => {
             .then(() => {
               return (params.provider ? jwt.verify(params.provider) : Promise.resolve())
                 .then(userInfo => {
-                  const user = _.pick(params, ['email', 'password', 'image', 'termsAndConditions'].concat(availableFieldNames))
+                  const validation = validations.validate(params.provider, 'register', params)
+                  if (validation.error) {
+                    // Check validation.error.details
+                    return reject('FORM_VALIDATION_FAILED')
+                  }
+                  const user = validation.value
                   return database.insertUser(Object.assign({}, user, {
                     id,
                     emailConfirmationToken

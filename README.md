@@ -152,6 +152,11 @@ Passwords are hashed with a `kdf` derivation that uses the `scrypt` hash functio
 - It's impossible to swap the hash between two users
 - A user can only change his email address knowing his password
 
+Why `scrypt`:
+
+- Because it was specifically designed to make it costly to perform large-scale custom hardware attacks by requiring large amounts of memory
+- Protects against brute-force attacks because it is computationally intensive
+
 ### JWT
 
 JWT is used for exchanging information between the microservice and your app. You can configure the JWT algorithm (check the configuration options above). You can choose between just hashing with HMAC or using private key algorithms such as RSA and ECDSA.

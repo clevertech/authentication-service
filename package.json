@@ -1,13 +1,14 @@
 {
   "name": "pnp-authentication-service",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Clevertech's micro service for authentication",
   "author": "Clevertech <support@clevertech.biz>",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "start-dev": "nodemon",
-    "test": "PORT=3001 ava --verbose --fail-fast",
+    "test": "DATABASE_URL=postgresql://localhost/pnp PORT=3001 ava --verbose --fail-fast",
+    "test:watch": "DATABASE_URL=postgresql://localhost/pnp PORT=3001 ava --verbose --fail-fast --watch",
     "lint": "standard"
   },
   "bin": {
@@ -18,6 +19,7 @@
     "ejs": "^2.5.6",
     "express": "^4.13.3",
     "i18n": "^0.8.3",
+    "joi": "^10.4.1",
     "jsonwebtoken": "^7.3.0",
     "knex": "^0.12.7",
     "lodash": "^4.17.4",

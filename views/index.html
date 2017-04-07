@@ -84,7 +84,9 @@
         </div>
       </h2>
       <form class="ui large form" method="POST" action="<%= baseUrl %>/register">
+        <% if (provider) { %>
         <input type="hidden" name="provider" value="<%= provider %>">
+        <% } %>
         <div class="ui stacked segment">
           <% if (userInfo.image) { %>
             <img class="ui circular image" src="<%= userInfo.image %>">

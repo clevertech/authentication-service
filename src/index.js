@@ -51,7 +51,7 @@ exports.createRouter = (config = {}) => {
       return Promise.reject(err)
     })
   }
-  const users = require('./services/users')(env, jwt, database, sendEmail)
+  const users = require('./services/users')(env, jwt, database, sendEmail, validations)
 
   database.init()
 

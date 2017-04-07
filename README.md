@@ -102,6 +102,8 @@ This is the list of available configuration options:
 | `EMAIL_CONFIRMATION_PROVIDERS` | Set to true if you want to send a confirmation email to your users to confirm their email addresses even when they signup with third party services such as Facebook |
 | `STYLESHEET` | Optionally specify a URL with the stylesheet to be used in the authentication service. The default one can be found in `http://localhost:3000/auth/stylesheet.css` (change the URL if you are running the microservice somewhere else) |
 | `TERMS_AND_CONDITIONS` | Optionally specify the URL to the terms and conditions. If you specify one, a checkbox will be added with a link to them and the user will be required to accept the terms for signing up. Then this value is stored in the database, so you can for example specify a different URL every time you update the terms and conditions and you will know which version of the terms and conditions the user accepted. |
+| `RECAPTCHA_SITE_KEY` | If you want to use reCAPTCHA, set this configuration option and all forms will require to pass through reCAPTCHA |
+| `RECAPTCHA_SECRET_KEY` | If you want to use reCAPTCHA, set this configuration option and all forms will require to pass through reCAPTCHA |
 | `JWT_ALGORITHM` | The algorithm to be used in the JWT tokens. `HS256` by default |
 | `JWT_SECRET` | The JWT secret to be used when a HMAC algorithm is being used (such as for `HS256`) |
 | `JWT_PRIVATE_KEY` | The PEM encoded private key for RSA and ECDSA algorithms |
@@ -167,7 +169,7 @@ Email confirmation tokens are JWT tokens with a expiration date. This could be e
 
 ### To be done regarding security
 
-- Protection against brute force attacks slowing down the server response and adding reCAPTCHA:
+- Protection against brute force attacks slowing down the server response:
   - From same IP
   - To the same login
   - Using the same password

@@ -31,8 +31,8 @@ module.exports = (router, redirect, env) => {
       method: 'POST',
       form: {
         code,
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        client_id: googleClientId,
+        client_secret: googleClientSecret,
         redirect_uri: redirectUrl,
         grant_type: 'authorization_code'
       },

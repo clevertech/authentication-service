@@ -56,3 +56,30 @@ a.ui.button {
 .ui.message {
   font-size: 0.9em;
 }
+
+
+.fill {
+  width: 100%;
+}
+
+.aligned.center {
+  text-align: center;
+}
+
+.aligned.left {
+  text-align: left;
+}
+
+
+#done .green {
+  color: #16ab39;
+}
+
+#done .red {
+  color: #d01919;
+}
+
+#done .large.icon {
+  font-size: 10em;
+  margin: 0;
+}

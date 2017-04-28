@@ -20,6 +20,11 @@ module.exports = env => {
       })
   }
 
+  const addColumn = (table, columnName, callback) => {
+    return db.schema.hasColumn(table, columnName)
+      .then(exists => (!exists && db.schema.alterTable(table, callback)))
+  }
+
   return {
     init () {
       return Promise.resolve()
@@ -71,6 +76,8 @@ module.exports = env => {
             table.timestamps()
           })
         })
+        .then(() => addColumn('auth_users', 'twofactorSecret', table => table.string('twofactorSecret')))
+        .then(() => addColumn('auth_users', 'twofactorPhone', table => table.string('twofactorPhone')))
     },
     findUserByEmail (email) {
       return db('auth_users').where({ email }).then(last)

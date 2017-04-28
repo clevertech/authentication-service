@@ -1,0 +1,143 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <%- include('./include-head.html', { projectName, title }) %>
+  <%- include('./include-head-recaptcha.html', { recaptchaSiteKey }) %>
+</head>
+<body>
+  <%- include('./include-recaptcha.html', { recaptchaSiteKey }) %>
+  <%- include('./include-alert.html', { error, info }) %>
+  <div class="ui middle aligned center aligned grid" data-action="configuretwofactor" style="display: <%= action === 'configuretwofactor' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          How would you like to receive your authentication codes?
+        </div>
+      </h2>
+      <% if (user.twofactor) { %>
+        <div class="ui stacked segment aligned center">
+          <p>
+            <% if (user.twofactor === 'qr') { %>
+              Two factor authentication is currently configured with an application.
+            <% } else if (user.twofactor === 'sms') { %>
+              Two factor authentication is currently configured with this mobile phone: <strong><%= obfuscatePhone(user.twofactorPhone) %></strong><br>
+            <% } %>
+            Any change will override the current configuration.
+          </p>
+          <p>Or you can <a href="<%= baseUrl %>/configuretwofactordisable?jwt=<%= jwt %>" data-push='configuretwofactordisable' type="submit">disable 2FA</a></p>
+        </div>
+      <% } %>
+      <div class="ui stacked segment aligned left">
+        <h2><i class="mobile icon"></i> SMS text message</h2>
+        <p>Receive a text message to your mobile device</p>
+        <a href="<%= baseUrl %>/configuretwofactorsms?jwt=<%= jwt %>" data-push='configuretwofactorsms' type="submit" class="ui fluid large teal button">Configure phone</a>
+      </div>
+      <div class="ui stacked segment aligned left">
+        <h2><i class="qrcode icon"></i> Use an app</h2>
+        <p>Scan a QR code with Google Authenticator or similar apps</p>
+        <a href="<%= baseUrl %>/configuretwofactorqr?jwt=<%= jwt %>" data-push='configuretwofactorqr' type="submit" class="ui fluid large teal button">Configure app</a>
+      </div>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="configuretwofactorqr" style="display: <%= action === 'configuretwofactorqr' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          Configure Two-Factor Authentication
+        </div>
+      </h2>
+      <form class="ui large form aligned left" method="POST" action="<%= baseUrl %>/configuretwofactorqr">
+        <input type="hidden" name="jwt" value="<%= jwt %>">
+        <div class="ui stacked segment">
+          <h2><i class="mobile icon"></i> Get the App</h2>
+          <p>Download and install the <a href="https://support.google.com/accounts/answer/1066447" target="_blank">Google Authenticator</a> for your phone or tablet</p>
+        </div>
+        <div class="ui stacked segment">
+          <h2><i class="qrcode icon"></i> Scan this Barcode</h2>
+          <p>Open the authentication app and scan the QR code</p>
+          <div class="aligned center fill">
+            <img src="<%= locals.qrCode %>" style="margin: 0 auto">
+          </div>
+        </div>
+        <div class="ui stacked segment">
+          <h2><i class="keyboard icon"></i> Enter Verification Code</h2>
+          <p>Enter the 6-digit verification code generated in the app</p>
+          <div class="ui form">
+            <div class="inline fields">
+              <div class="eight wide field">
+                <label>Code</label>
+                <input type="text" name="token" placeholder="6-digit code">
+              </div>
+              <div class="five field">
+                <button type="submit" class="ui fluid teal submit button">Verify Code</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="configuretwofactorsms" style="display: <%= action === 'configuretwofactorsms' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          Add SMS Authentication
+        </div>
+      </h2>
+      <form class="ui large form aligned left" method="POST" action="<%= baseUrl %>/configuretwofactorsms">
+        <input type="hidden" name="jwt" value="<%= jwt %>">
+        <div class="ui stacked segment">
+          <h3>What's your phone number?</h3>
+          <div class="required field">
+            <div class="ui left icon input fill">
+              <i class="mobile icon"></i>
+              <input type="tel" name="phone" placeholder="Full mobile phone number with country code">
+            </div>
+          </div>
+          <button type="submit" class="ui fluid teal submit button">Send authentication code</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="configuretwofactorsmsconfirm" style="display: <%= action === 'configuretwofactorsmsconfirm' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          Add SMS Authentication
+        </div>
+      </h2>
+      <form class="ui large form aligned left" method="POST" action="<%= baseUrl %>/configuretwofactorsmsconfirm">
+        <input type="hidden" name="jwt" value="<%= jwt %>">
+        <div class="ui stacked segment">
+          <p>Please enter the 6-digit authentication code we just sent to:</p>
+          <p><strong><%= obfuscatePhone(locals.phone) %></strong></p>
+          <div class="required field">
+            <div class="ui left icon input fill">
+              <i class="hashtag icon"></i>
+              <input type="text" name="token" placeholder="Verification code">
+            </div>
+          </div>
+          <button type="submit" class="ui fluid teal submit button">Verify code</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="ui middle aligned center aligned grid" data-action="configuretwofactordisable" style="display: <%= action === 'configuretwofactordisable' ? 'flex' : 'none' %>">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          Disable two factor authentication
+        </div>
+      </h2>
+      <form class="ui large form aligned center" method="POST" action="<%= baseUrl %>/configuretwofactordisable">
+        <input type="hidden" name="jwt" value="<%= jwt %>">
+        <div class="ui stacked segment">
+          <p>Please, confirm that you want to disable two factor authentication</p>
+          <button type="submit" class="ui fluid negative submit button">Disable two factor authentication</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <%- include('./include-javascript.html', { forms }) %>
+</body>
+</html>

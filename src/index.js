@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const querystring = require('querystring')
 const path = require('path')
 const express = require('express')
 const bodyParser = require('body-parser')
@@ -8,6 +9,8 @@ const ejs = require('ejs')
 const emailService = require('pnp-email-service')
 const fetch = require('node-fetch')
 const useragent = require('useragent')
+const speakeasy = require('speakeasy')
+const QRCode = require('qrcode')
 const i18n = require('i18n')
 i18n.configure({
   locales: ['en'],
@@ -15,6 +18,7 @@ i18n.configure({
   directory: path.join(__dirname, '/locales'),
   updateFiles: false
 })
+const _ = require('lodash')
 
 const providers = {
   google: require('./providers/google'),
@@ -23,6 +27,10 @@ const providers = {
   linkedin: require('./providers/linkedin'),
   github: require('./providers/github')
 }
+
+const qrForUrl = url => new Promise((resolve, reject) => {
+  QRCode.toDataURL(url, (err, qrCode) => err ? reject(err) : resolve(qrCode))
+})
 
 exports.createJwtClient = (config = {}) => {
   const env = require('./utils/env')(config)
@@ -33,10 +41,12 @@ exports.createJwtClient = (config = {}) => {
 exports.createRouter = (config = {}) => {
   const env = require('./utils/env')(config)
   const jwt = require('./utils/jwt')(env)
+  const crypto = require('./utils/crypto')(env)
   const validations = require('./validations')(env)
   const recaptcha = require('./recaptcha')(env, fetch)
   const database = require('./database/knex')(env)
   const emailServer = emailService.startServer(config)
+  const sms = require('./sms/twilio')(env, fetch)
   const sendEmail = (emailOptions, templateName, templateOptions) => {
     const port = emailServer.address().port
     const url = `http://0.0.0.0:${port}/email/send`
@@ -69,17 +79,42 @@ exports.createRouter = (config = {}) => {
   const signupRedirect = (user) =>
     jwt.sign({ user }, { expiresIn: '1h' }).then(token => baseUrl + '/register?provider=' + token)
 
-  const providerSignup = user => {
+  const redirectToDone = (res, qs) => {
+    res.redirect(baseUrl + '/done?' + querystring.stringify(qs))
+  }
+
+  const redirectTwofactor = (user) => {
+    if (user.twofactor) {
+      return Promise.resolve()
+        .then(() => {
+          if (user.twofactor === 'sms') {
+            return crypto.decrypt(user.twofactorSecret)
+              .then(secret => {
+                const phone = user.twofactorPhone
+                const token = speakeasy.totp({ secret, encoding: 'base32' })
+                return sms.send(phone, `${token} is your ${projectName} verification code`)
+              })
+          }
+        })
+        .then(() => {
+          return jwt.sign({ userId: user.id }, { expiresIn: '1h' }).then(token => baseUrl + '/twofactor?jwt=' + token)
+        })
+    }
+    return redirect(user)
+  }
+
+  const providerSignup = (user, res) => {
     return database.findUserByProviderLogin(user.login)
       .then(existingUser => {
         if (existingUser) {
-          if (!emailConfirmationProviders || existingUser.emailConfirmed) {
-            return redirect(existingUser)
+          if (emailConfirmationProviders && !existingUser.emailConfirmed) {
+            return baseUrl + '/signin?error=EMAIL_CONFIRMATION_REQUIRED'
           }
-          return baseUrl + '/signin?error=EMAIL_CONFIRMATION_REQUIRED'
+          return redirectTwofactor(existingUser)
         }
         return signupRedirect(user)
       })
+      .then(url => res.redirect(url))
   }
 
   const router = express.Router()
@@ -103,36 +138,64 @@ exports.createRouter = (config = {}) => {
     }
   }
 
-  const renderIndex = (req, res, next, data) => {
+  const authenticated = (req, res, next) => {
+    const token = req.query.jwt || req.body.jwt
+    jwt.verify(token)
+      .then(data => {
+        return database.findUserById(data.userId)
+          .then(user => {
+            if (!user) return Promise.reject(new Error('USER_NOT_FOUND'))
+            req.user = user
+            req.jwt = token
+            req.jwtData = data
+            next()
+          })
+      })
+      .catch(err => {
+        console.error(err.stack)
+        res.render('Error')
+      })
+  }
+
+  const renderFile = (req, res, next, file, data) => {
     const { baseUrl, query } = req
     const { error, info, provider, token } = query
-    const { signupFields, termsAndConditions } = validations
-    const filename = path.join(views, 'index.html')
+    const filename = path.join(views, file)
     const allData = Object.assign({
       projectName,
-      someProvidersAvailable,
-      availableProviders,
-      signupFields,
       baseUrl,
       error,
       info,
       provider,
       token,
-      termsAndConditions,
       stylesheet,
       forms: validations.forms(provider),
       recaptchaSiteKey: recaptcha.siteKey(),
       __: res.__
     }, data)
     const options = {}
+    ejs.renderFile(filename, allData, options, (err, html) => {
+      err ? next(err) : res.type('html').send(html)
+    })
+  }
+
+  const renderIndex = (req, res, next, data) => {
+    const { query } = req
+    const { provider } = query
+    const { signupFields, termsAndConditions } = validations
     Promise.resolve()
       .then(() => provider ? jwt.verify(provider) : {})
-      .then(data => {
-        Object.assign(allData, { userInfo: data.user || {} })
-        ejs.renderFile(filename, allData, options, (err, html) => {
-          err ? next(err) : res.type('html').send(html)
-        })
+      .then(userData => {
+        const allData = Object.assign({
+          someProvidersAvailable,
+          availableProviders,
+          termsAndConditions,
+          signupFields,
+          userInfo: userData.user || {}
+        }, data)
+        renderFile(req, res, next, 'index.html', allData)
       })
+      .catch(next)
   }
 
   router.get('/', (req, res, next) => {
@@ -153,7 +216,7 @@ exports.createRouter = (config = {}) => {
         if (emailConfirmation && !user.emailConfirmed) {
           return res.redirect(req.baseUrl + '/signin?error=EMAIL_CONFIRMATION_REQUIRED')
         }
-        return redirect(user)
+        return redirectTwofactor(user)
           .then(url => res.redirect(url))
       })
       .catch(next)
@@ -199,9 +262,11 @@ exports.createRouter = (config = {}) => {
   })
 
   router.get('/reset', (req, res, next) => {
+    const { emailConfirmationToken: token } = req.query
     renderIndex(req, res, next, {
       title: 'Reset your password',
-      action: 'reset'
+      action: 'reset',
+      token
     })
   })
 
@@ -214,7 +279,7 @@ exports.createRouter = (config = {}) => {
       .catch(next)
   })
 
-  router.get('/changepassword', (req, res, next) => {
+  router.get('/changepassword', authenticated, (req, res, next) => {
     renderIndex(req, res, next, {
       title: 'Change your password',
       action: 'changepassword'
@@ -225,7 +290,7 @@ exports.createRouter = (config = {}) => {
     res.send('WIP')
   })
 
-  router.get('/changeemail', (req, res, next) => {
+  router.get('/changeemail', authenticated, (req, res, next) => {
     renderIndex(req, res, next, {
       title: 'Change your email address',
       action: 'changeemail'
@@ -245,14 +310,248 @@ exports.createRouter = (config = {}) => {
       .catch(next)
   })
 
+  router.get('/test', (req, res, next) => {
+    database.findUserByEmail('gimenete@gmail.com')
+      .then(user => jwt.sign({ userId: user.id }))
+      .then(jwt => {
+        const data = { jwt }
+        const filename = path.join(views, 'test.html')
+        ejs.renderFile(filename, data, {}, (err, html) => {
+          err ? next(err) : res.type('html').send(html)
+        })
+      })
+      .catch(next)
+  })
+
+  const labelForQr = user => `${projectName} (${user.email})`
+
+  const normalizePhone = str => {
+    const match = str.match(/\d+/g)
+    if (!match) return ''
+    str = match.join('')
+    if (str.startsWith('00')) str = '+' + str.substring(2)
+    else if (!str.startsWith('+')) str = '+' + str
+    return str
+  }
+
+  const obfuscatePhone = phone => {
+    if (!phone) return ''
+    return phone.substring(0, 4) +
+      phone.substring(4, phone.length - 4).replace(/\d/g, '*') +
+      phone.substring(phone.length - 4)
+  }
+
+  const renderConfigureTwofactor = (req, res, next, data) => {
+    const { user, jwt } = req
+    const { twofactorSecret } = req.jwtData
+    const url = speakeasy.otpauthURL({
+      secret: twofactorSecret,
+      encoding: 'base32',
+      label: encodeURIComponent(labelForQr(user))
+    })
+    qrForUrl(url)
+      .then(qrCode => {
+        renderFile(req, res, next, 'twofactorconfigure.html', Object.assign({
+          qrCode,
+          jwt,
+          user,
+          obfuscatePhone
+        }, data))
+      })
+      .catch(next)
+  }
+
+  router.get('/configuretwofactor', authenticated, (req, res, next) => {
+    const { user } = req
+    const secret = speakeasy.generateSecret({ name: labelForQr(user) })
+    const jwtData = { userId: user.id, twofactorSecret: secret.base32 }
+    jwt.sign(jwtData, { expiresIn: '1h' })
+      .then((jwt) => {
+        req.jwtData = jwtData
+        req.jwt = jwt
+        renderConfigureTwofactor(req, res, next, {
+          title: 'Configure Two-Factor Authentication',
+          action: 'configuretwofactor'
+        })
+      })
+      .catch(next)
+  })
+
+  router.get('/configuretwofactorqr', authenticated, (req, res, next) => {
+    renderConfigureTwofactor(req, res, next, {
+      title: 'Configure Two-Factor Authentication',
+      action: 'configuretwofactorqr'
+    })
+  })
+
+  router.get('/configuretwofactorsms', authenticated, (req, res, next) => {
+    renderConfigureTwofactor(req, res, next, {
+      title: 'Add SMS Authentication',
+      action: 'configuretwofactorsms'
+    })
+  })
+
+  router.post('/configuretwofactorqr', authenticated, (req, res, next) => {
+    const { user, jwtData } = req
+    const { twofactorSecret: secret } = jwtData
+    const { token } = req.body
+
+    const tokenValidates = speakeasy.totp.verify({
+      secret,
+      encoding: 'base32',
+      token,
+      window: 6
+    })
+    if (tokenValidates) {
+      crypto.encrypt(secret)
+        .then(encryptedSecret => {
+          return database.updateUser({
+            id: user.id,
+            twofactor: 'qr',
+            twofactorSecret: encryptedSecret,
+            twofactorPhone: null
+          })
+        })
+        .then(() => {
+          redirectToDone(res, { info: 'TWO_FACTOR_AUTHENTICATION_CONFIGURATION_SUCCESS' })
+        })
+        .catch(next)
+    } else {
+      res.redirect(baseUrl + '/configuretwofactorsms?' + querystring.stringify({
+        error: 'INVALID_AUTHENTICATION_CODE',
+        jwt: req.jwt
+      }))
+    }
+  })
+
+  router.post('/configuretwofactorsms', authenticated, (req, res, next) => {
+    const { user, jwtData } = req
+    const { twofactorSecret: secret } = jwtData
+    const phone = normalizePhone(req.body.phone) // TODO: handle error if missing
+    const token = speakeasy.totp({ secret, encoding: 'base32' })
+
+    // send sms
+    sms.send(phone, `${token} is your ${projectName} verification code`)
+      .then(() => {
+        return jwt.sign({ twofactorSecret: secret, phone, userId: user.id })
+      })
+      .then(jwt => {
+        res.redirect(baseUrl + '/configuretwofactorsmsconfirm?jwt=' + jwt)
+      })
+      .catch(next)
+  })
+
+  router.get('/configuretwofactorsmsconfirm', authenticated, (req, res, next) => {
+    const { jwtData } = req
+    const { phone } = jwtData
+    renderConfigureTwofactor(req, res, next, {
+      title: 'Add SMS Authentication',
+      action: 'configuretwofactorsmsconfirm',
+      phone
+    })
+  })
+
+  router.post('/configuretwofactorsmsconfirm', authenticated, (req, res, next) => {
+    const { user, jwtData } = req
+    const { twofactorSecret: secret, phone } = jwtData
+    const { token } = req.body
+
+    const tokenValidates = speakeasy.totp.verify({
+      secret,
+      encoding: 'base32',
+      token,
+      window: 6
+    })
+    if (tokenValidates) {
+      crypto.encrypt(secret)
+        .then(encryptedSecret => {
+          return database.updateUser({
+            id: user.id,
+            twofactor: 'sms',
+            twofactorSecret: encryptedSecret,
+            twofactorPhone: phone
+          })
+        })
+        .then(() => {
+          redirectToDone(res, { info: 'TWO_FACTOR_AUTHENTICATION_CONFIGURATION_SUCCESS' })
+        })
+        .catch(next)
+    } else {
+      res.redirect(baseUrl + '/configuretwofactorsms?' + querystring.stringify({
+        error: 'INVALID_AUTHENTICATION_CODE',
+        jwt: req.jwt
+      }))
+    }
+  })
+
+  router.get('/configuretwofactordisable', authenticated, (req, res, next) => {
+    renderConfigureTwofactor(req, res, next, {
+      title: 'Disable two factor authentication',
+      action: 'configuretwofactordisable'
+    })
+  })
+
+  router.post('/configuretwofactordisable', authenticated, (req, res, next) => {
+    const { user } = req
+    return database.updateUser({
+      id: user.id,
+      twofactor: null,
+      twofactorSecret: null,
+      twofactorPhone: null
+    })
+    .then(() => {
+      redirectToDone(res, { info: 'TWO_FACTOR_AUTHENTICATION_DISABLED' })
+    })
+    .catch(next)
+  })
+
+  router.get('/twofactor', authenticated, (req, res, next) => {
+    const { user, jwt } = req
+    renderFile(req, res, next, 'twofactor.html', {
+      title: 'Enter an authentication code',
+      action: 'twofactor',
+      obfuscatePhone,
+      user,
+      jwt
+    })
+  })
+
+  router.post('/twofactor', authenticated, (req, res, next) => {
+    const { user } = req
+    const { token } = req.body
+    crypto.decrypt(user.twofactorSecret)
+      .then(secret => {
+        const tokenValidates = speakeasy.totp.verify({
+          secret,
+          encoding: 'base32',
+          token,
+          window: 6
+        })
+        if (tokenValidates) {
+          return redirect(user)
+            .then(url => res.redirect(url))
+        } else {
+          return Promise.reject(new Error('INVALID_TOKEN'))
+        }
+      })
+      .catch(next)
+  })
+
+  router.get('/done', (req, res, next) => {
+    renderFile(req, res, next, 'done.html', { redirectUrl, title: '' })
+  })
+
   const stylesheetFullPath = path.join(__dirname, '../static/stylesheet.css')
   router.get('/stylesheet.css', (req, res, next) => {
     res.sendFile(stylesheetFullPath, {}, err => err && next(err))
   })
 
   router.use((err, req, res, next) => {
-    const message = err.handled ? err.message : 'INTERNAL_ERROR'
-    res.redirect(req.baseUrl + req.path + '?error=' + message)
+    console.error(err.stack)
+    if (!err.handled) return redirectToDone(res, { error: 'INTERNAL_ERROR' })
+    const jwt = req.query.jwt || req.body.jwt
+    const qs = querystring.stringify(Object.assign({ jwt }, { error: err.message }))
+    res.redirect(req.baseUrl + req.path + '?' + qs)
     if (!err.handled) winston.error(err)
   })
 

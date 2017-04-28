@@ -1,0 +1,11 @@
+<% if (recaptchaSiteKey) { %>
+  <script src='https://www.google.com/recaptcha/api.js'></script>
+  <script>
+    function onSubmit (token) {
+      var input = $('<input type="hidden" name="g-recaptcha-response">')
+      input.val(token)
+      window.submitForm.append(input)
+      window.submitForm.get(0).submit()
+    }
+  </script>
+<% } %>

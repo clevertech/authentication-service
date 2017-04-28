@@ -16,7 +16,7 @@ module.exports = (env, fetch) => {
         const remoteip = req.ip
         const url = 'https://www.google.com/recaptcha/api/siteverify'
         const body = { secret, response, remoteip }
-        return fetch(url, {
+        fetch(url, {
           method: 'POST',
           body: querystring.stringify(body),
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' }

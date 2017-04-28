@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <%- include('./include-head.html', { projectName, title }) %>
+</head>
+<body id="done">
+  <div class="ui middle aligned center aligned grid">
+    <div class="column">
+      <div class="ui large form aligned left">
+        <div class="large icon">
+          <% if (error) { %>
+            <p class="aligned center red"><i class="warning icon"></i></p>
+          <% } %>
+          <% if (info && info !== __(info)) { %>
+            <p class="aligned center green"><i class="checkmark icon"></i></p>
+          <% } %>
+        </div>
+        <div class="ui stacked segment aligned center">
+          <% if (error) { %>
+            <p><%= error === __(error) ? __('UNKNOWN_ERROR') : __(error) %></p>
+          <% } %>
+          <% if (info && info !== __(info)) { %>
+            <p><%= __(info) %></p>
+          <% } %>
+          <a href="<%= redirectUrl %>" class="ui fluid teal submit button">Continue to the website</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <%- include('./include-javascript.html', { forms }) %>
+</body>
+</html>

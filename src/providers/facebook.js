@@ -66,7 +66,7 @@ module.exports = (router, redirect, env) => {
                   description: [body.first_name, body.last_name].filter(Boolean).join(' '),
                   data: { access_token }
                 }
-                return redirect(user).then(url => res.redirect(url))
+                return redirect(user, res)
               })
           })
       })

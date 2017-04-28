@@ -66,6 +66,8 @@ module.exports = env => {
       return Joi.object().keys(keys)
     },
     validate (provider, formName, values) {
+      values = Object.assign({}, values)
+      delete values['g-recaptcha-response']
       const schema = this.schema(provider, formName)
       return Joi.validate(values, schema, { abortEarly: false })
     },

@@ -280,14 +280,24 @@ exports.createRouter = (config = {}) => {
   })
 
   router.get('/changepassword', authenticated, (req, res, next) => {
+    const { jwt } = req
     renderIndex(req, res, next, {
       title: 'Change your password',
-      action: 'changepassword'
+      action: 'changepassword',
+      jwt
     })
   })
 
-  router.post('/changepassword', (req, res, next) => {
-    res.send('WIP')
+  router.post('/changepassword', authenticated, (req, res, next) => {
+    const { user } = req
+    const { oldPassword, newPassword } = req.body
+    users.changePassword(user.id, oldPassword, newPassword)
+      .then(() => {
+        redirectToDone(res, {
+          info: 'PASSWORD_CHANGED_SUCCESSFULLY'
+        })
+      })
+      .catch(next)
   })
 
   router.get('/changeemail', authenticated, (req, res, next) => {
@@ -297,7 +307,7 @@ exports.createRouter = (config = {}) => {
     })
   })
 
-  router.post('/changeemail', (req, res, next) => {
+  router.post('/changeemail', authenticated, (req, res, next) => {
     res.send('WIP')
   })
 

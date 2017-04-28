@@ -181,20 +181,20 @@
         </div>
       </h2>
       <form class="ui large form" method="POST" action="<%= baseUrl %>/changepassword">
-        <input type="hidden" name="token" value="<%= token %>">
+        <input type="hidden" name="jwt" value="<%= locals.jwt %>">
         <div class="ui stacked segment">
           <div class="required field">
             <label>Old password</label>
             <div class="ui left icon input">
               <i class="lock icon"></i>
-              <input type="password" name="oldpassword" placeholder="Old password">
+              <input type="password" name="oldPassword" placeholder="Old password">
             </div>
           </div>
           <div class="required field">
             <label>New password</label>
             <div class="ui left icon input">
               <i class="lock icon"></i>
-              <input type="password" name="newpassword" placeholder="New password">
+              <input type="password" name="newPassword" placeholder="New password">
             </div>
           </div>
           <button type="submit" class="ui fluid large teal submit button">Set the new password</button>

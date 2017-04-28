@@ -15,5 +15,6 @@
   "RECAPTCHA_VALIDATION_FAILED": "Recaptcha validation failed",
   "INVALID_AUTHENTICATION_CODE": "Invalid authentication code",
   "TWO_FACTOR_AUTHENTICATION_CONFIGURATION_SUCCESS": "Two factor authentication was configured successfully",
-  "TWO_FACTOR_AUTHENTICATION_DISABLED": "Two factor authentication was disabled successfully"
+  "TWO_FACTOR_AUTHENTICATION_DISABLED": "Two factor authentication was disabled successfully",
+  "PASSWORD_CHANGED_SUCCESSFULLY": "Your password has been changed successfully"
 }

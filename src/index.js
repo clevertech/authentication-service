@@ -320,19 +320,6 @@ exports.createRouter = (config = {}) => {
       .catch(next)
   })
 
-  router.get('/test', (req, res, next) => {
-    database.findUserByEmail('gimenete@gmail.com')
-      .then(user => jwt.sign({ userId: user.id }))
-      .then(jwt => {
-        const data = { jwt }
-        const filename = path.join(views, 'test.html')
-        ejs.renderFile(filename, data, {}, (err, html) => {
-          err ? next(err) : res.type('html').send(html)
-        })
-      })
-      .catch(next)
-  })
-
   const labelForQr = user => `${projectName} (${user.email})`
 
   const normalizePhone = str => {

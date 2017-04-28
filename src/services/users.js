@@ -46,21 +46,23 @@ module.exports = (env, jwt, database, sendEmail, validations) => {
     register (params, client) {
       const id = uuid()
       const email = normalizeEmail(params.email)
+      const { provider } = params
+      delete params.provider
       return createToken()
         .then(emailConfirmationToken => {
           return database.findUserByEmail(email)
             .then(exists => {
               if (exists) return reject('USER_ALREADY_EXISTS')
-              if (!params.password && !params.provider) return reject('PASSWORD_REQUIRED')
+              if (!params.password && !provider) return reject('PASSWORD_REQUIRED')
               if (params.password) {
                 return passwords.hash(params.email, params.password)
                   .then(hash => (params.password = hash))
               }
             })
             .then(() => {
-              return (params.provider ? jwt.verify(params.provider) : Promise.resolve())
+              return (provider ? jwt.verify(provider) : Promise.resolve())
                 .then(userInfo => {
-                  const validation = validations.validate(params.provider, 'register', params)
+                  const validation = validations.validate(provider, 'register', params)
                   if (validation.error) {
                     // Check validation.error.details
                     return reject('FORM_VALIDATION_FAILED')

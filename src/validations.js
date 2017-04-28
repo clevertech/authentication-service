@@ -12,7 +12,8 @@ module.exports = env => {
       const forms = {
         register: {
           fields: {
-            email: ['email', 'empty']
+            email: ['email', 'empty'],
+            image: []
           }
         },
         signin: {

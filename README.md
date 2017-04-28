@@ -204,6 +204,5 @@ Email confirmation tokens are JWT tokens with a expiration date. This could be e
   - From same IP
   - To the same login
   - Using the same password
-- 2 Factor Authentication using SMS
 - Password strength calculator
 - Re-confirm email after long inactivity

@@ -9,13 +9,13 @@ module.exports = (router, redirect, env) => {
   const facebookAppSecret = env('FACEBOOK_APP_SECRET')
   if (!facebookAppId || !facebookAppSecret) return false
 
-  const redirectUrl = (req) => baseUrl + '/provider/facebook/callback'
+  const redirectUrl = baseUrl + '/provider/facebook/callback'
 
   router.get('/provider/facebook', (req, res, next) => {
     const base = 'https://www.facebook.com/v2.8/dialog/oauth?'
     const query = querystring.stringify({
       app_id: facebookAppId,
-      redirect_uri: redirectUrl(req),
+      redirect_uri: redirectUrl,
       scope: 'email'
     })
     res.redirect(base + query)
@@ -26,7 +26,7 @@ module.exports = (router, redirect, env) => {
     const base = 'https://graph.facebook.com/v2.8/oauth/access_token?'
     const query = querystring.stringify({
       client_id: facebookAppId,
-      redirect_uri: redirectUrl(req),
+      redirect_uri: redirectUrl,
       client_secret: facebookAppSecret,
       code
     })

@@ -98,6 +98,8 @@ This is the list of available configuration options:
 | `REDIRECT_URL` | Callback URL that the user will be redirected to when authenticated |
 | `FACEBOOK_APP_ID` | Required if you want to sign in your users with Facebook |
 | `FACEBOOK_APP_SECRET` | Required if you want to sign in your users with Facebook |
+| `GOOGLE_CLIENT_ID` | Required if you want to sign in your users with Google |
+| `GOOGLE_CLIENT_SECRET` | Required if you want to sign in your users with Google |
 | `EMAIL_CONFIRMATION` | Set to true if you want to send a confirmation email to your users to confirm their email addresses |
 | `EMAIL_CONFIRMATION_PROVIDERS` | Set to true if you want to send a confirmation email to your users to confirm their email addresses even when they signup with third party services such as Facebook |
 | `STYLESHEET` | Optionally specify a URL with the stylesheet to be used in the authentication service. The default one can be found in `http://localhost:3000/auth/stylesheet.css` (change the URL if you are running the microservice somewhere else) |

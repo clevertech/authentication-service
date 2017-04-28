@@ -5,6 +5,8 @@ module.exports = (env, fetch) => {
   const authToken = env('TWILIO_AUTH_TOKEN')
   const numberFrom = env('TWILIO_NUMBER_FROM')
 
+  if (!accountSid || !authToken || !numberFrom) return null
+
   // See https://www.twilio.com/docs/api/rest/sending-messages
   return {
     send (numberTo, text) {
@@ -32,9 +34,6 @@ module.exports = (env, fetch) => {
           .catch(err => {
             return Promise.reject(new Error(`Twilio returned ${res.status}. ${err.message || String(err)}`))
           })
-      })
-      .then(json => {
-        console.log('json', json)
       })
     }
   }

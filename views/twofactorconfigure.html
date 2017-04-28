@@ -27,11 +27,13 @@
           <p>Or you can <a href="<%= baseUrl %>/configuretwofactordisable?jwt=<%= jwt %>" data-push='configuretwofactordisable' type="submit">disable 2FA</a></p>
         </div>
       <% } %>
+      <% if (smsService) { %>
       <div class="ui stacked segment aligned left">
         <h2><i class="mobile icon"></i> SMS text message</h2>
         <p>Receive a text message to your mobile device</p>
         <a href="<%= baseUrl %>/configuretwofactorsms?jwt=<%= jwt %>" data-push='configuretwofactorsms' type="submit" class="ui fluid large teal button">Configure phone</a>
       </div>
+      <% } %>
       <div class="ui stacked segment aligned left">
         <h2><i class="qrcode icon"></i> Use an app</h2>
         <p>Scan a QR code with Google Authenticator or similar apps</p>

@@ -46,7 +46,7 @@ exports.createRouter = (config = {}) => {
   const recaptcha = require('./recaptcha')(env, fetch)
   const database = require('./database/knex')(env)
   const emailServer = emailService.startServer(config)
-  const sms = require('./sms/twilio')(env, fetch)
+  const smsService = require('./sms/twilio')(env, fetch)
   const sendEmail = (emailOptions, templateName, templateOptions) => {
     const port = emailServer.address().port
     const url = `http://0.0.0.0:${port}/email/send`
@@ -92,7 +92,7 @@ exports.createRouter = (config = {}) => {
               .then(secret => {
                 const phone = user.twofactorPhone
                 const token = speakeasy.totp({ secret, encoding: 'base32' })
-                return sms.send(phone, `${token} is your ${projectName} verification code`)
+                return smsService.send(phone, `${token} is your ${projectName} verification code`)
               })
           }
         })
@@ -352,7 +352,8 @@ exports.createRouter = (config = {}) => {
           qrCode,
           jwt,
           user,
-          obfuscatePhone
+          obfuscatePhone,
+          smsService: !!smsService
         }, data))
       })
       .catch(next)
@@ -428,7 +429,7 @@ exports.createRouter = (config = {}) => {
     const token = speakeasy.totp({ secret, encoding: 'base32' })
 
     // send sms
-    sms.send(phone, `${token} is your ${projectName} verification code`)
+    smsService.send(phone, `${token} is your ${projectName} verification code`)
       .then(() => {
         return jwt.sign({ twofactorSecret: secret, phone, userId: user.id })
       })

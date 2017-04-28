@@ -110,6 +110,11 @@ This is the list of available configuration options:
 | `JWT_PUBLIC_KEY` | The PEM encoded public key for RSA and ECDSA algorithms |
 | `JWT_EXPIRES_IN` | Optional. Default `expiresIn` value when generating JWT tokens |
 | `JWT_NOT_BEFORE` | Optional. Default `notBefore` value when generating JWT tokens |
+| `TWILIO_ACCOUNT_SID` | Optional. Configure this for adding SMS support for 2FA |
+| `TWILIO_AUTH_TOKEN` | Optional. Configure this for adding SMS support for 2FA |
+| `TWILIO_NUMBER_FROM` | Optional. Configure this for adding SMS support for 2FA |
+| `SYMMETRIC_KEY` | Optional. Required for 2FA. This is the key that will be used for encrypting users's 2FA seeds. You can easily create a key using `require('crypto').randomBytes(128 / 8).toString('hex')` on a Node.js interactive prompt. This generates a secure random 128bit key encoded as hexadecimal |
+| `SYMMETRIC_ALGORITHM` | Optional. It's the algorithm used for encrypting users's 2FA seeds. Defaults to `aes-256-gcm` |
 
 The simplest JWT configuration is just setting up the `JWT_SECRET` value.
 
@@ -132,6 +137,32 @@ EMAIL_TRANSPORT=ses
 AWS_KEY=xxxx
 AWS_SECRET=xxxx
 AWS_REGION=us-east-1
+```
+
+## Two factor authentication
+
+Two factor authentication is optional. If you want to allow your users to have 2FA you just need to redirect them to `/auth/configuretwofactor?jwt=${jwtToken}`. The `jwtToken` only needs the `userId`:
+
+```javascript
+jwt.sign({ userId: user.id })
+  .then(jwtToken => {
+    // redirect or use the `jwtToken` in a template
+  })
+```
+
+There are two supported mechanisms for 2FA: via app or via SMS. If you want to enable SMS you will need to configure the `TWILIO_xxx` env variables.
+
+You will also need to configure a `SYMMETRIC_KEY` that will be used to encrypt users's 2FA seeds.
+
+## Change password
+
+To allow a user to change his/her password you just need to redirect him/her to `/auth/changepassword?jwt=${jwtToken}`. The `jwtToken` only needs the `userId`:
+
+```javascript
+jwt.sign({ userId: user.id })
+  .then(jwtToken => {
+    // redirect or use the `jwtToken` in a template
+  })
 ```
 
 ## Security

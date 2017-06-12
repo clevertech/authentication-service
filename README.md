@@ -82,6 +82,8 @@ You will find [example templates here](https://github.com/clevertech/authenticat
 
 ## Configuration options
 
+__Quickly getting started__: if you want to use an `.env` file you can run `pnp-authentication-service-starter` which will guide you to configure almost all configuration options, will copy the email templates and will even give you a code snippet to integrate `pnp-authentication-service` in your app.
+
 All configuration options can be configured using ENV variables. If using it as an express router, then configuration variables can also be passed as an argument to this method. All ENV variables can be prefixed with `AUTH_`. Since one value can be configured in many ways some take precedence over others. For example for the `DEFAULT_FROM` variable the value used will be the first found following this list:
 
 - `AUTH_PROJECT_NAME` parameter passed to `createRouter()`

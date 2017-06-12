@@ -35,6 +35,7 @@
     "pg": "^6.1.3",
     "pify": "^2.3.0",
     "pnp-email-service": "^0.1.5",
+    "pnp-media-service": "^0.1.3",
     "qrcode": "^0.8.1",
     "request": "^2.79.0",
     "scrypt": "^6.0.3",

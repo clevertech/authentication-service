@@ -48,5 +48,9 @@ exports.availableFields = {
     type: 'text',
     icon: 'user',
     unique: true
+  },
+  image: {
+    type: 'image',
+    description: 'User image'
   }
 }

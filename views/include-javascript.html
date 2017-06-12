@@ -20,12 +20,36 @@
 
     var forms = <%- JSON.stringify(forms) %>
 
+    $('.image-cropper').each(function () {
+      var self = $(this)
+      var src = self.attr('data-src')
+      self.cropit({
+        imageBackground: true,
+        imageBackgroundBorderWidth: 15,
+        smallImage: 'allow',
+        imageState: { src: src }
+      })
+      self.find('.select-image-btn').click(function (e) {
+        e.stopPropagation() // aviods form validation
+        self.find('.cropit-image-input').click()
+      })
+    })
+
     Object.keys(forms).forEach(function (key) {
       $('[data-action=' + key + '] form').form(forms[key])
     })
 
     $('form').on('submit', function (e) {
       var form = $(this)
+      var cropper = form.find('.image-cropper')
+      var url = cropper.cropit('export', {
+        type: 'image/jpeg',
+        quality: .9
+      })
+      if (url) {
+        const data = url.substring('data:image/jpeg;base64,'.length)
+        form.find('input[name=image]').val(data)
+      }
       var errors = $(this).find('.field.error')
       if (errors.size() > 0) return
       $(this).addClass('loading')

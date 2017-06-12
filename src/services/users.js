@@ -23,7 +23,7 @@ const reject = reason => {
   return Promise.reject(err)
 }
 
-module.exports = (env, jwt, database, sendEmail, validations) => {
+module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
   const baseUrl = env('BASE_URL')
   const projectName = env('PROJECT_NAME')
   const random = () => require('crypto').randomBytes(16).toString('hex')
@@ -68,14 +68,34 @@ module.exports = (env, jwt, database, sendEmail, validations) => {
                     return reject('FORM_VALIDATION_FAILED')
                   }
                   const user = validation.value
-                  return database.insertUser(Object.assign({}, user, {
-                    id,
-                    emailConfirmationToken
-                  }))
-                  .then(() => {
-                    const user = userInfo && userInfo.user
-                    if (user) return database.insertProvider({ userId: id, login: user.login, data: user.data || {} })
-                  })
+                  return Promise.resolve()
+                    .then(() => {
+                      if (user.image) {
+                        return mediaClient.upload({
+                          buffer: user.image,
+                          destinationPath: 'user-' + Date.now(),
+                          imageOperations: {
+                            width: 160,
+                            height: 160,
+                            autoRotate: true,
+                            appendExtension: true
+                          }
+                        })
+                        .then((response) => {
+                          user.image = response.url
+                        })
+                      }
+                    })
+                    .then(() => {
+                      return database.insertUser(Object.assign({}, user, {
+                        id,
+                        emailConfirmationToken
+                      }))
+                        .then(() => {
+                          const user = userInfo && userInfo.user
+                          if (user) return database.insertProvider({ userId: id, login: user.login, data: user.data || {} })
+                        })
+                    })
                 })
             })
             .then(() => database.findUserByEmail(email))

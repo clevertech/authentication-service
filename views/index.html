@@ -56,14 +56,22 @@
         <input type="hidden" name="provider" value="<%= provider %>">
         <% } %>
         <div class="ui stacked segment">
-          <% if (userInfo.image) { %>
-            <img class="ui circular image" src="<%= userInfo.image %>">
-            <input type="hidden" name="image" value="<%= userInfo.image %>">
+          <% if (imageField) { %>
+            <div class="image-cropper" data-src="<%= userInfo.image %>">
+              <div class="cropit-preview"></div>
+              <input type="range" class="cropit-image-zoom-input" />
+              <input type="file" class="cropit-image-input" />
+              <input type="hidden" name="image" />
+              <div class="select-image-btn-wrapper">
+                <div class="select-image-btn ui small teal submit button">Select new image</div>
+              </div>
+            </div>
           <% } %>
           <% if (userInfo.icon && userInfo.description) { %>
             <p><i class="<%= userInfo.icon %> icon"></i> <%= userInfo.description %></p>
           <% } %>
           <% for (const field of signupFields) { %>
+          <% if (field.type !== 'text') continue %>
           <div class="required field">
             <label><%= field.description %></label>
             <div class="ui left icon input">

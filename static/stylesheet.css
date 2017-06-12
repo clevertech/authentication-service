@@ -83,3 +83,90 @@ a.ui.button {
   font-size: 10em;
   margin: 0;
 }
+
+/* Cropit */
+
+.cropit-preview {
+  width: 160px;
+  height: 160px;
+  margin: 0 auto;
+  margin-top: 30px;
+  background-color: #eee;
+}
+
+.cropit-preview::before {
+  font-family: 'Icons';
+  content: "\f030";
+  position: absolute;
+  font-size: 100px;
+  line-height: 1;
+  top: 40px;
+  text-align: center;
+  right: 0;
+  left: 0;
+}
+
+.cropit-image-loaded.cropit-preview::before {
+  display: none;
+}
+
+.cropit-image-zoom-input {
+  display: none;
+}
+
+.cropit-image-loaded + .cropit-image-zoom-input {
+  display: inline;
+}
+
+/*
+* If the slider or anything else is covered by the background image,
+* use relative or absolute position on it
+*/
+input.cropit-image-zoom-input {
+  position: relative;
+}
+
+/* Show load indicator when image is being loaded */
+.cropit-preview.cropit-image-loading .spinner {
+  opacity: 1;
+}
+
+/* Show move cursor when image has been loaded */
+.cropit-preview.cropit-image-loaded .cropit-preview-image-container {
+  cursor: move;
+}
+
+/* Gray out zoom slider when the image cannot be zoomed */
+.cropit-image-zoom-input[disabled] {
+  opacity: .2;
+}
+
+/* Hide default file input button if you want to use a custom button */
+input.cropit-image-input {
+  visibility: hidden;
+  position: absolute;
+}
+
+/* The following styles are only relevant to when background image is enabled */
+
+/* Translucent background image */
+.cropit-preview-background {
+  opacity: .2;
+}
+
+/*
+* If the slider or anything else is covered by the background image,
+* use non-static position on it
+*/
+input.cropit-image-zoom-input {
+  position: relative;
+}
+
+/* Limit the background image by adding overflow: hidden */
+#image-cropper {
+  overflow: hidden;
+}
+
+.select-image-btn-wrapper {
+  margin: 10px 0 20px 0;
+}

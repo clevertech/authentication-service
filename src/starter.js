@@ -61,7 +61,7 @@ Promise.resolve()
 
     questions.push({
       type: 'input',
-      message: 'To what URL users will be redirected after login/register?',
+      message: 'What URL users will be redirected to after login/register?',
       name: 'AUTH_REDIRECT_URL',
       default: 'http://localhost:3000/callback'
     })
@@ -248,6 +248,13 @@ Promise.resolve()
         'ap-south-1',
         'sa-east-1'
       ]
+    })
+
+    questions.push({
+      type: 'input',
+      message: 'What Amazon S3 bucket you want to upload the user images to',
+      name: 'AWS_S3_BUCKET',
+      when: (answers) => answers.AUTH_SIGNUP_FIELDS.indexOf('image') >= 0
     })
 
     questions.push({

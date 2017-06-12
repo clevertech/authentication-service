@@ -7,6 +7,7 @@ const bodyParser = require('body-parser')
 const winston = require('winston')
 const ejs = require('ejs')
 const emailService = require('pnp-email-service')
+const mediaService = require('pnp-media-service')
 const fetch = require('node-fetch')
 const useragent = require('useragent')
 const speakeasy = require('speakeasy')
@@ -62,7 +63,8 @@ exports.createRouter = (config = {}) => {
       return Promise.reject(err)
     })
   }
-  const users = require('./services/users')(env, jwt, database, sendEmail, validations)
+  const mediaClient = mediaService.createServerAndClient({})
+  const users = require('./services/users')(env, jwt, database, sendEmail, mediaClient, validations)
 
   database.init()
 
@@ -183,6 +185,7 @@ exports.createRouter = (config = {}) => {
     const { query } = req
     const { provider } = query
     const { signupFields, termsAndConditions } = validations
+    const imageField = signupFields.find(field => field.name === 'image')
     Promise.resolve()
       .then(() => provider ? jwt.verify(provider) : {})
       .then(userData => {
@@ -191,6 +194,7 @@ exports.createRouter = (config = {}) => {
           availableProviders,
           termsAndConditions,
           signupFields,
+          imageField,
           userInfo: userData.user || {}
         }, data)
         renderFile(req, res, next, 'index.html', allData)
@@ -539,10 +543,17 @@ exports.createRouter = (config = {}) => {
     renderFile(req, res, next, 'done.html', { redirectUrl, title: '' })
   })
 
-  const stylesheetFullPath = path.join(__dirname, '../static/stylesheet.css')
-  router.get('/stylesheet.css', (req, res, next) => {
-    res.sendFile(stylesheetFullPath, {}, err => err && next(err))
-  })
+  const staticFiles = [
+    'stylesheet.css',
+    'jquery.cropit.js'
+  ]
+
+  for (const staticFile of staticFiles) {
+    const fullPath = path.join(__dirname, '..', 'static', staticFile)
+    router.get('/' + staticFile, (req, res, next) => {
+      res.sendFile(fullPath, {}, err => err && next(err))
+    })
+  }
 
   router.use((err, req, res, next) => {
     console.error(err.stack)

@@ -183,7 +183,7 @@ Promise.resolve()
     })
 
     questions.push({
-      type: 'input',
+      type: 'confirm',
       message: 'Do you want to support sending SMS with Twilio for 2 Factor Authentication?',
       name: '_twilio',
       when: (answers) => answers._2fa

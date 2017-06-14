@@ -66,7 +66,7 @@ exports.createRouter = (config = {}) => {
   const mediaClient = mediaService.createServerAndClient({})
   const users = require('./services/users')(env, jwt, database, sendEmail, mediaClient, validations)
 
-  database.init()
+  database.init().catch(err => console.error(err.stack))
 
   const views = env('VIEWS_DIR') || path.join(__dirname, '..', 'views')
   const baseUrl = env('BASE_URL')

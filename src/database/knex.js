@@ -49,7 +49,6 @@ module.exports = env => {
                     table.string('password').nullable()
                     table.boolean('emailConfirmed').notNullable().defaultTo(false)
                     table.string('emailConfirmationToken').nullable().unique()
-                    table.string('image').nullable()
                     table.string('termsAndConditions').nullable()
                     table.timestamps()
                   }

@@ -12,8 +12,7 @@ module.exports = env => {
       const forms = {
         register: {
           fields: {
-            email: ['email', 'empty'],
-            image: []
+            email: ['email', 'empty']
           }
         },
         signin: {
@@ -52,6 +51,7 @@ module.exports = env => {
       for (const field of signupFields) {
         registerFields[field.name] = ['empty']
       }
+      registerFields.image = []
       return forms
     },
     schema (provider, formName) {

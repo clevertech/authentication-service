@@ -19,7 +19,6 @@ i18n.configure({
   directory: path.join(__dirname, '/locales'),
   updateFiles: false
 })
-const _ = require('lodash')
 
 const providers = {
   google: require('./providers/google'),
@@ -128,7 +127,9 @@ exports.createRouter = (config = {}) => {
     obj[provider] = providers[provider](router, providerSignup, env, database)
     return obj
   }, {})
-  const someProvidersAvailable = Object.keys(availableProviders).length > 0
+  const someProvidersAvailable = Object.keys(availableProviders)
+    .map(key => availableProviders[key])
+    .filter(Boolean).length > 0
 
   const client = req => {
     const agent = useragent.lookup(req.headers['user-agent'])
@@ -559,7 +560,9 @@ exports.createRouter = (config = {}) => {
     console.error(err.stack)
     if (!err.handled) return redirectToDone(res, { error: 'INTERNAL_ERROR' })
     const jwt = req.query.jwt || req.body.jwt
-    const qs = querystring.stringify(Object.assign({ jwt }, { error: err.message }))
+    const index = err.message.indexOf(':')
+    const error = err.message.substring(0, index >= 0 ? index : undefined)
+    const qs = querystring.stringify(Object.assign({ jwt }, { error }))
     res.redirect(req.baseUrl + req.path + '?' + qs)
     if (!err.handled) winston.error(err)
   })

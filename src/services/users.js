@@ -48,6 +48,7 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
       const email = normalizeEmail(params.email)
       const { provider } = params
       delete params.provider
+      if (!params.image) delete params.image // removes empty strings
       return createToken()
         .then(emailConfirmationToken => {
           return database.findUserByEmail(email)
@@ -64,8 +65,7 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
                 .then(userInfo => {
                   const validation = validations.validate(provider, 'register', params)
                   if (validation.error) {
-                    // Check validation.error.details
-                    return reject('FORM_VALIDATION_FAILED')
+                    return reject('FORM_VALIDATION_FAILED: ' + validation.error.details.map(detail => detail.message).join(', '))
                   }
                   const user = validation.value
                   return Promise.resolve()

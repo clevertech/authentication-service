@@ -49,16 +49,18 @@ module.exports = env => {
       if (!provider) registerFields.password = ['empty']
       if (termsAndConditions) registerFields.termsAndConditions = ['checked']
       for (const field of signupFields) {
-        registerFields[field.name] = ['empty']
+        registerFields[field.name] = field.type === 'text' ? ['empty'] : []
       }
-      registerFields.image = []
       return forms
     },
     schema (provider, formName) {
       const { fields } = this.forms(provider)[formName]
       const keys = Object.keys(fields).reduce((keys, key) => {
         const arr = fields[key]
-        const constraint = Joi.string().required().trim()
+        const constraint = Joi.string().trim()
+        arr.indexOf('empty') >= 0
+          ? constraint.required()
+          : constraint.optional()
         if (arr.indexOf('email') >= 0) constraint.email().lowercase()
         keys[key] = constraint
         return keys

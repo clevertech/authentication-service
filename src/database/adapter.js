@@ -14,7 +14,6 @@ module.exports = env => {
     })
   } else {
     mongo.MongoClient.connect(env('DATABASE_URL'), (err, db) => {
-      console.log('got the db');
       _MongoClient = db;
     })
   }

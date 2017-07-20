@@ -26,7 +26,9 @@ module.exports = env => {
       .then(exists => (!exists && relationalDB.schema.alterTable(table, callback)))
   }
 
-
+  const createCollectionIfNotExists = (collectionName, callback) => {
+    callback = _.once(callback)
+  }
 
   const interface = {
     pg: {
@@ -34,8 +36,9 @@ module.exports = env => {
         return Promise.resolve()
           .then(() => {
             return relationalDB.schema.hasTable('auth_users').then(tableExists => {
-              return relationalDB.schema.createTableIfNotExists('auth_users', _.once(table => {
-                if (!tableExists) {
+              let p;
+              if (!tableExists) {
+                p = relationalDB.schema.createTableIfNotExists('auth_users', _.once(table => {
                   table.uuid('id').primary();
                   table.string('email').notNullable().unique();
                   table.string('twofactor').nullable();
@@ -44,9 +47,11 @@ module.exports = env => {
                   table.string('emailConfirmationToken').nullable().unique();
                   table.string('termsAndConditions').nullable();
                   table.timestamps();
-                }
-              }))
-              .then(function() {
+                }))
+              } else {
+                p = Promise.resolve()
+              }
+              return p.then(function() {
                 return fieldNames
                   .reduce((prom, fieldName) => {
                     return prom.then(missing => {
@@ -57,34 +62,42 @@ module.exports = env => {
                     });
                   }, Promise.resolve([]))
                   .then(missing => {
-                    return relationalDB.schema.createTableIfNotExists(
-                      'auth_users',
-                      _.once(table => {
-                        missing.forEach(fieldName => table.string(fieldName));
-                      })
-                    );
+                    if(missing) {
+                      return relationalDB.schema.createTableIfNotExists(
+                        'auth_users',
+                        _.once(table => {
+                          missing.forEach(fieldName => table.string(fieldName));
+                        })
+                      );
+                    } else {
+                      return Promise.resolve()
+                    }
                   });
 
               });
             });
           })
           .then(() => {
-            return createTableIfNotExists('auth_providers', table => {
-              table.uuid('userId').notNullable();
-              table.foreign('userId').references('auth_users.id').onDelete('cascade');
-              table.string('login').notNullable().unique();
-              table.json('data').notNullable();
-              table.timestamps();
-            });
+            return relationalDB.schema.hasTable('auth_providers').then(tableExists => {
+              return tableExists ? Promise.resolve() : createTableIfNotExists('auth_providers', _.once(table => {
+                table.uuid('userId').notNullable();
+                table.foreign('userId').references('auth_users.id').onDelete('cascade');
+                table.string('login').notNullable().unique();
+                table.json('data').notNullable();
+                table.timestamps();
+              }));
+            })
           })
           .then(() => {
-            return createTableIfNotExists('auth_sessions', table => {
-              table.uuid('userId').notNullable();
-              table.foreign('userId').references('auth_users.id').onDelete('cascade');
-              table.string('userAgent').notNullable();
-              table.string('ip').notNullable();
-              table.timestamps();
-            });
+            return relationalDB.schema.hasTable('auth_sessions').then(tableExists => {
+              return tableExists ? Promise.resolve() : createTableIfNotExists('auth_sessions', _.once(table => {
+                table.uuid('userId').notNullable();
+                table.foreign('userId').references('auth_users.id').onDelete('cascade');
+                table.string('userAgent').notNullable();
+                table.string('ip').notNullable();
+                table.timestamps();
+              }));
+            })
           })
           .then(() => addColumn('auth_users', 'twofactorSecret', table => table.string('twofactorSecret')))
           .then(() => addColumn('auth_users', 'twofactorPhone', table => table.string('twofactorPhone')));

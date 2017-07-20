@@ -1,10 +1,11 @@
 const knex = require('knex')
-const _MongoClient = require('mongodb').MongoClient
+const mongo = require('mongodb');
 const constants = require('../constants')
 const _ = require('lodash')
 
 module.exports = env => {
   let _RelationalClient;
+  let _MongoClient;
   if(['mysql', 'pg'].indexOf(env('DATABASE_ENGINE')) !== -1) {
     _RelationalClient = knex({ 
       client: env('DATABASE_ENGINE'),
@@ -12,7 +13,10 @@ module.exports = env => {
       searchPath: 'knex,public'
     })
   } else {
-    _MongoClient.connect(env('DATABASE_URL'))
+    mongo.MongoClient.connect(env('DATABASE_URL'), (err, db) => {
+      console.log('got the db');
+      _MongoClient = db;
+    })
   }
 
   const fieldNames = Object.keys(constants.availableFields)
@@ -134,25 +138,27 @@ module.exports = env => {
         return Promise.resolve()
       },
       findUserByEmail(email) {
-        return Promise.resolve()
+        return _MongoClient.collection('auth_users').findOne({ email });
       },
       findUserByEmailConfirmationToken(emailConfirmationToken) {
-        return Promise.resolve()
+        return _MongoClient.collection('auth_users').findOne({ emailConfirmationToken });
       },
       findUserById(id) {
-        return Promise.resolve()
+        return _MongoClient.collection('auth_users').findOne({ _id: mongo.ObjectID(id) });
       },
       insertUser(user) {
-        return Promise.resolve()
+        return _MongoClient.collection('auth_users').insert( user );
       },
       updateUser(user) {
-        return Promise.resolve()
+        return _MongoClient.collection('auth_users').update({ _id: mongo.ObjectID(user._id) }, {$set: _.omit(user, '_id')});
       },
       insertProvider(provider) {
-        return Promise.resolve()
+        return _MongoClient.collection('auth_providers').insert( provider );
       },
       findUserByProviderLogin(login) {
-        return Promise.resolve()
+        return _MongoClient.collection('auth_providers').findOne({ login }).then(function(provider) {
+          return _MongoClient.collection('auth_users').findOne({ _id: provider.userId });
+        })
       }
     }
   };

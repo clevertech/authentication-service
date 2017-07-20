@@ -47,7 +47,7 @@ Promise.resolve()
 
     questions.push({
       type: 'input',
-      message: 'Which DBMS will you use? (pg, mysql, mongo)',
+      message: 'Which DBMS will you use? (pg, mysql, mongodb)',
       name: 'DATABASE_ENGINE',
       default: answers => `pg`
     });

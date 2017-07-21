@@ -3,7 +3,7 @@ const constants = require('../constants')
 const _ = require('lodash')
 
 module.exports = env => {
-  const relationalClient = knex({
+  const db = knex({
     client: env('DATABASE_ENGINE'),
     connection: env('DATABASE_URL'),
     searchPath: 'knex,public'
@@ -15,25 +15,25 @@ module.exports = env => {
 
   const createTableIfNotExists = (tableName, callback) => {
     callback = _.once(callback)
-    return relationalClient.schema.hasTable(tableName)
+    return db.schema.hasTable(tableName)
       .then((tableExists) => {
-        return relationalClient.schema.createTableIfNotExists(tableName, table => !tableExists ? callback(table) : void 0)
+        return db.schema.createTableIfNotExists(tableName, table => !tableExists ? callback(table) : void 0)
       })
   }
 
   const addColumn = (table, columnName, callback) => {
-    return relationalClient.schema.hasColumn(table, columnName)
-      .then(exists => (!exists && relationalClient.schema.alterTable(table, callback)))
+    return db.schema.hasColumn(table, columnName)
+      .then(exists => (!exists && db.schema.alterTable(table, callback)))
   }
 
   return {
     init () {
       return Promise.resolve()
         .then(() => {
-          return relationalClient.schema.hasTable('auth_users').then(tableExists => {
+          return db.schema.hasTable('auth_users').then(tableExists => {
             let p
             if (!tableExists) {
-              p = relationalClient.schema.createTableIfNotExists('auth_users', _.once(table => {
+              p = db.schema.createTableIfNotExists('auth_users', _.once(table => {
                 table.uuid('id').primary()
                 table.string('email').notNullable().unique()
                 table.string('twofactor').nullable()
@@ -50,7 +50,7 @@ module.exports = env => {
               return fieldNames
                 .reduce((prom, fieldName) => {
                   return prom.then(missing => {
-                    return relationalClient.schema.hasColumn('auth_users', fieldName).then(exists => {
+                    return db.schema.hasColumn('auth_users', fieldName).then(exists => {
                       if (!exists) missing.push(fieldName)
                       return missing
                     })
@@ -58,7 +58,7 @@ module.exports = env => {
                 }, Promise.resolve([]))
                 .then(missing => {
                   if (missing) {
-                    return relationalClient.schema.createTableIfNotExists(
+                    return db.schema.createTableIfNotExists(
                       'auth_users',
                       _.once(table => {
                         missing.forEach(fieldName => table.string(fieldName))
@@ -72,7 +72,7 @@ module.exports = env => {
           })
         })
         .then(() => {
-          return relationalClient.schema.hasTable('auth_providers').then(tableExists => {
+          return db.schema.hasTable('auth_providers').then(tableExists => {
             return tableExists ? Promise.resolve() : createTableIfNotExists('auth_providers', _.once(table => {
               table.uuid('userId').notNullable()
               table.foreign('userId').references('auth_users.id').onDelete('cascade')
@@ -83,7 +83,7 @@ module.exports = env => {
           })
         })
         .then(() => {
-          return relationalClient.schema.hasTable('auth_sessions').then(tableExists => {
+          return db.schema.hasTable('auth_sessions').then(tableExists => {
             return tableExists ? Promise.resolve() : createTableIfNotExists('auth_sessions', _.once(table => {
               table.uuid('userId').notNullable()
               table.foreign('userId').references('auth_users.id').onDelete('cascade')
@@ -97,25 +97,25 @@ module.exports = env => {
         .then(() => addColumn('auth_users', 'twofactorPhone', table => table.string('twofactorPhone')))
     },
     findUserByEmail (email) {
-      return relationalClient('auth_users').where({ email }).then(last)
+      return db('auth_users').where({ email }).then(last)
     },
     findUserByEmailConfirmationToken (emailConfirmationToken) {
-      return relationalClient('auth_users').where({ emailConfirmationToken }).then(last)
+      return db('auth_users').where({ emailConfirmationToken }).then(last)
     },
     findUserById (id) {
-      return relationalClient('auth_users').where({ id }).select().then(last)
+      return db('auth_users').where({ id }).select().then(last)
     },
     insertUser (user) {
-      return relationalClient('auth_users').insert(user)
+      return db('auth_users').insert(user)
     },
     updateUser (user) {
-      return relationalClient('auth_users').where('id', '=', user.id).update(user)
+      return db('auth_users').where('id', '=', user.id).update(user)
     },
     insertProvider (provider) {
-      return relationalClient('auth_providers').insert(provider)
+      return db('auth_providers').insert(provider)
     },
     findUserByProviderLogin (login) {
-      return relationalClient('auth_providers')
+      return db('auth_providers')
         .where({ login })
         .leftJoin('auth_users', 'auth_providers.userId', 'auth_users.id')
         .then(last)

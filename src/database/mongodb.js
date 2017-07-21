@@ -2,12 +2,12 @@ const mongo = require('mongodb')
 const _ = require('lodash')
 
 module.exports = env => {
-  let mongoClient
-  mongo.MongoClient.connect(env('DATABASE_URL'), (err, db) => {
+  let db
+  mongo.MongoClient.connect(env('DATABASE_URL'), (err, connection) => {
     if (err) {
       console.error(err)
     }
-    mongoClient = db
+    db = connection
   })
 
   return {
@@ -15,26 +15,26 @@ module.exports = env => {
       return Promise.resolve()
     },
     findUserByEmail (email) {
-      return mongoClient.collection('auth_users').findOne({ email })
+      return db.collection('auth_users').findOne({ email })
     },
     findUserByEmailConfirmationToken (emailConfirmationToken) {
-      return mongoClient.collection('auth_users').findOne({ emailConfirmationToken })
+      return db.collection('auth_users').findOne({ emailConfirmationToken })
     },
     findUserById (id) {
-      return mongoClient.collection('auth_users').findOne({ _id: mongo.ObjectID(id) })
+      return db.collection('auth_users').findOne({ _id: mongo.ObjectID(id) })
     },
     insertUser (user) {
-      return mongoClient.collection('auth_users').insert(user)
+      return db.collection('auth_users').insert(user)
     },
     updateUser (user) {
-      return mongoClient.collection('auth_users').update({ _id: mongo.ObjectID(user._id) }, {$set: _.omit(user, '_id')})
+      return db.collection('auth_users').update({ _id: mongo.ObjectID(user._id) }, {$set: _.omit(user, '_id')})
     },
     insertProvider (provider) {
-      return mongoClient.collection('auth_providers').insert(provider)
+      return db.collection('auth_providers').insert(provider)
     },
     findUserByProviderLogin (login) {
-      return mongoClient.collection('auth_providers').findOne({ login }).then(function (provider) {
-        return mongoClient.collection('auth_users').findOne({ _id: mongo.ObjectID(provider.userId) })
+      return db.collection('auth_providers').findOne({ login }).then(function (provider) {
+        return db.collection('auth_users').findOne({ _id: mongo.ObjectID(provider.userId) })
       })
     }
   }

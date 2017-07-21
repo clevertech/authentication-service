@@ -31,7 +31,7 @@ module.exports = env => {
     },
     findUserByProviderLogin(login) {
       return _MongoClient.collection('auth_providers').findOne({ login }).then(function(provider) {
-        return _MongoClient.collection('auth_users').findOne({ _id: provider.userId });
+        return _MongoClient.collection('auth_users').findOne({ _id: mongo.ObjectID(provider.userId) });
       })
     }
   };

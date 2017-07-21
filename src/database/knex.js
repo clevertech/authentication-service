@@ -1,5 +1,5 @@
 const knex = require('knex')
-const constants = require('../../constants')
+const constants = require('../constants')
 const _ = require('lodash')
 
 module.exports = env => {

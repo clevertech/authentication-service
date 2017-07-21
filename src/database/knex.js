@@ -26,7 +26,7 @@ module.exports = env => {
       .then(exists => (!exists && relationalClient.schema.alterTable(table, callback)))
   }
 
-  const dbInterface = {
+  return {
     init () {
       return Promise.resolve()
         .then(() => {
@@ -121,6 +121,4 @@ module.exports = env => {
         .then(last)
     }
   }
-
-  return dbInterface
 }

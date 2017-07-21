@@ -10,7 +10,7 @@ module.exports = env => {
     mongoClient = db
   })
 
-  const dbInterface = {
+  return {
     init () {
       return Promise.resolve()
     },
@@ -38,6 +38,4 @@ module.exports = env => {
       })
     }
   }
-
-  return dbInterface
 }

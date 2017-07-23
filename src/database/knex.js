@@ -4,7 +4,7 @@ const _ = require('lodash')
 
 module.exports = env => {
   const db = knex({
-    client: env('DATABASE_ENGINE'),
+    client: env('DATABASE_ENGINE', 'pg'),
     connection: env('DATABASE_URL'),
     searchPath: 'knex,public'
   })

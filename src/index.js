@@ -44,7 +44,7 @@ exports.createRouter = (config = {}) => {
   const crypto = require('./utils/crypto')(env)
   const validations = require('./validations')(env)
   const recaptcha = require('./recaptcha')(env, fetch)
-  const database = require('./database/knex')(env)
+  const database = require('./database/adapter')(env)
   const emailServer = emailService.startServer(config)
   const smsService = require('./sms/twilio')(env, fetch)
   const sendEmail = (emailOptions, templateName, templateOptions) => {

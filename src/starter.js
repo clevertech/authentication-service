@@ -47,6 +47,13 @@ Promise.resolve()
 
     questions.push({
       type: 'input',
+      message: 'Which DBMS will you use? (pg, mysql, mongodb)',
+      name: 'DATABASE_ENGINE',
+      default: answers => `pg`
+    })
+
+    questions.push({
+      type: 'input',
       message: 'What\'s the database URL?',
       name: 'DATABASE_URL',
       default: (answers) => `postgresql://localhost/${normalize(answers.AUTH_PROJECT_NAME)}`

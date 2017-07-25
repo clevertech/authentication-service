@@ -4,10 +4,11 @@ const _ = require('lodash')
 
 module.exports = env => {
   const db = knex({
-    client: 'pg',
+    client: env('DATABASE_ENGINE', 'pg'),
     connection: env('DATABASE_URL'),
     searchPath: 'knex,public'
   })
+
   const fieldNames = Object.keys(constants.availableFields)
 
   const last = result => Array.isArray(result) ? result[result.length - 1] : result
@@ -29,50 +30,67 @@ module.exports = env => {
     init () {
       return Promise.resolve()
         .then(() => {
-          return db.schema.hasTable('auth_users')
-            .then((tableExists) => {
-              return fieldNames.reduce((prom, fieldName) => {
-                return prom.then((missing) => {
-                  return db.schema.hasColumn('auth_users', fieldName)
-                    .then(exists => {
+          return db.schema.hasTable('auth_users').then(tableExists => {
+            let p
+            if (!tableExists) {
+              p = db.schema.createTableIfNotExists('auth_users', _.once(table => {
+                table.uuid('id').primary()
+                table.string('email').notNullable().unique()
+                table.string('twofactor').nullable()
+                table.string('password').nullable()
+                table.boolean('emailConfirmed').notNullable().defaultTo(false)
+                table.string('emailConfirmationToken').nullable().unique()
+                table.string('termsAndConditions').nullable()
+                table.timestamps()
+              }))
+            } else {
+              p = Promise.resolve()
+            }
+            return p.then(function () {
+              return fieldNames
+                .reduce((prom, fieldName) => {
+                  return prom.then(missing => {
+                    return db.schema.hasColumn('auth_users', fieldName).then(exists => {
                       if (!exists) missing.push(fieldName)
                       return missing
                     })
-                })
-              }, Promise.resolve([]))
-              .then((missing) => {
-                return db.schema.createTableIfNotExists('auth_users', _.once(table => {
-                  if (!tableExists) {
-                    table.uuid('id').primary()
-                    table.string('email').notNullable().unique()
-                    table.string('twofactor').nullable()
-                    table.string('password').nullable()
-                    table.boolean('emailConfirmed').notNullable().defaultTo(false)
-                    table.string('emailConfirmationToken').nullable().unique()
-                    table.string('termsAndConditions').nullable()
-                    table.timestamps()
+                  })
+                }, Promise.resolve([]))
+                .then(missing => {
+                  if (missing) {
+                    return db.schema.createTableIfNotExists(
+                      'auth_users',
+                      _.once(table => {
+                        missing.forEach(fieldName => table.string(fieldName))
+                      })
+                    )
+                  } else {
+                    return Promise.resolve()
                   }
-                  missing.forEach(fieldName => table.string(fieldName))
-                }))
-              })
+                })
             })
-        })
-        .then(() => {
-          return createTableIfNotExists('auth_providers', table => {
-            table.uuid('userId').notNullable()
-            table.foreign('userId').references('auth_users.id').onDelete('cascade')
-            table.string('login').notNullable().unique()
-            table.json('data').notNullable()
-            table.timestamps()
           })
         })
         .then(() => {
-          return createTableIfNotExists('auth_sessions', table => {
-            table.uuid('userId').notNullable()
-            table.foreign('userId').references('auth_users.id').onDelete('cascade')
-            table.string('userAgent').notNullable()
-            table.string('ip').notNullable()
-            table.timestamps()
+          return db.schema.hasTable('auth_providers').then(tableExists => {
+            return tableExists ? Promise.resolve() : createTableIfNotExists('auth_providers', _.once(table => {
+              table.uuid('userId').notNullable()
+              table.foreign('userId').references('auth_users.id').onDelete('cascade')
+              table.string('login').notNullable().unique()
+              table.json('data').notNullable()
+              table.timestamps()
+            }))
+          })
+        })
+        .then(() => {
+          return db.schema.hasTable('auth_sessions').then(tableExists => {
+            return tableExists ? Promise.resolve() : createTableIfNotExists('auth_sessions', _.once(table => {
+              table.uuid('userId').notNullable()
+              table.foreign('userId').references('auth_users.id').onDelete('cascade')
+              table.string('userAgent').notNullable()
+              table.string('ip').notNullable()
+              table.timestamps()
+            }))
           })
         })
         .then(() => addColumn('auth_users', 'twofactorSecret', table => table.string('twofactorSecret')))
@@ -97,7 +115,8 @@ module.exports = env => {
       return db('auth_providers').insert(provider)
     },
     findUserByProviderLogin (login) {
-      return db('auth_providers').where({ login })
+      return db('auth_providers')
+        .where({ login })
         .leftJoin('auth_users', 'auth_providers.userId', 'auth_users.id')
         .then(last)
     }

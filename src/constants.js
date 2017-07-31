@@ -42,7 +42,7 @@ exports.availableFields = {
   country: {
     type: 'text',
     icon: 'map',
-    description: 'Coumtry'
+    description: 'Country'
   },
   username: {
     type: 'text',

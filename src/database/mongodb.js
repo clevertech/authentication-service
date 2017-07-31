@@ -27,7 +27,11 @@ module.exports = env => {
       return db.collection('auth_users').insert(user)
     },
     updateUser (user) {
-      return db.collection('auth_users').update({ _id: mongo.ObjectID(user._id) }, {$set: _.omit(user, '_id')})
+      return db.collection('auth_users')
+        .update({ _id: mongo.ObjectID(user._id) }, {$set: _.omit(user, '_id')})
+        .then(res => {
+          return res.result.nModified
+        })
     },
     insertProvider (provider) {
       return db.collection('auth_providers').insert(provider)

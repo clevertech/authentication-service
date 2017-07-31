@@ -5,6 +5,6 @@ const env = require('../src/utils/env')({
 })
 const adapter = require('../src/database/adapter')(env)
 
-test('Init', t => {
+test('init()', t => {
   adapter.init().then(res => t.truthy(res)).catch(err => t.falsy(res))
 })

@@ -9,6 +9,7 @@
     "start-dev": "better-npm-run start-dev",
     "test": "DATABASE_URL=postgresql://localhost/pnp PORT=3001 ava --verbose --fail-fast",
     "test:watch": "DATABASE_URL=postgresql://localhost/pnp PORT=3001 ava --verbose --fail-fast --watch",
+    "test:dev": "DATABASE_URL=postgresql://localhost/pnp PORT=3001 ava --verbose",
     "lint": "standard"
   },
   "betterScripts": {

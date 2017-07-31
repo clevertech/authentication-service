@@ -1,6 +1,6 @@
 const fetch = require('node-fetch')
 const querystring = require('querystring')
-const baseURL = `http://127.0.0.1:${process.env.PORT}`
+const baseURL = `http://127.0.0.1:${process.env.MICROSERVICE_PORT || 3000}`
 
 require('../').startServer() // starts the app server
 

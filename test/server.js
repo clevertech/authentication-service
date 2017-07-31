@@ -20,12 +20,11 @@ test('healthz', t => {
     })
 })
 
-test('robots.txt', t => {
-
-})
-
 test('get /', t => {
-
+  return fetch('/', {redirect: 'manual'})
+    .then(response => {
+      t.is(response.status, 302)
+    })
 })
 
 test('get /signin', t => {

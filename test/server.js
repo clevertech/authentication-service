@@ -24,6 +24,7 @@ test('get /', t => {
   return fetch('/', {redirect: 'manual'})
     .then(response => {
       t.is(response.status, 302)
+      t.not(response.headers._headers.location[0].indexOf('signin'), -1);
     })
 })
 

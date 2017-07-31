@@ -19,3 +19,115 @@ test('healthz', t => {
       t.deepEqual(json, {'status': 'OK'})
     })
 })
+
+test('robots.txt', t => {
+
+})
+
+test('get /', t => {
+
+})
+
+test('get /signin', t => {
+
+})
+
+test('post /signin', t => {
+
+})
+
+test('get /register', t => {
+
+})
+
+test('post /register', t => {
+
+})
+
+test('get /resetpassword', t => {
+
+})
+
+test('post /resetpassword', t => {
+
+})
+
+test('get /reset', t => {
+
+})
+
+test('post /reset', t => {
+
+})
+
+test('get /changepassword', t => {
+
+})
+
+test('post /changepassword', t => {
+
+})
+
+test('get /changeemail', t => {
+
+})
+
+test('post /changeemail', t => {
+
+})
+
+test('get /confirm', t => {
+
+})
+
+test('get /configuretwofactor', t => {
+
+})
+
+test('get /configuretwofactorqr', t => {
+
+})
+
+test('get /configuretwofactorsms', t => {
+
+})
+
+test('post /configuretwofactorqr', t => {
+
+})
+
+test('post /configuretwofactorsms', t => {
+
+})
+
+test('get /configuretwofactorsmsconfirm', t => {
+
+})
+
+test('post /configuretwofactorsmsconfirm', t => {
+
+})
+
+test('get /configuretwofactordisable', t => {
+
+})
+
+test('post /configuretwofactordisable', t => {
+
+})
+
+test('get /twofactor', t => {
+
+})
+
+test('post /twofactor', t => {
+
+})
+
+test('get /done', t => {
+
+})
+
+test('get /', t => {
+
+})

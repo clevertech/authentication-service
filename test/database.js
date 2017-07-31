@@ -10,8 +10,6 @@ test('MySQL Adapter', t => {
   adapter = require('../src/database/adapter')(env)
 
   adapter.init().then(res => t.truthy(res)).catch(err => t.falsy(res))
-
-
 })
 
 test('PostgreSQL Adapter', t => {
@@ -21,7 +19,7 @@ test('PostgreSQL Adapter', t => {
   })
   adapter = require('../src/database/adapter')(env)
 
-  console.log(adapter);
+  adapter.init().then(res => t.truthy(res)).catch(err => t.falsy(res))
 })
 
 test('Mongo Adapter', t => {
@@ -30,6 +28,6 @@ test('Mongo Adapter', t => {
     DATABASE_URL: 'mongodb://localhost/auth'
   })
   adapter = require('../src/database/adapter')(env)
-
-  console.log(adapter);
+  
+  adapter.init().then(res => t.truthy(res)).catch(err => t.falsy(res))
 })

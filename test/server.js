@@ -29,7 +29,13 @@ test('get /', t => {
 })
 
 test('get /signin', t => {
-
+  return fetch('/signin')
+    .then(response => {
+      return response.text();
+    }).then(function(body) {
+      // Test that we're on the Sign In page
+      t.not(body.indexOf('Sign In</title>'), -1);
+    })
 })
 
 test('post /signin', t => {

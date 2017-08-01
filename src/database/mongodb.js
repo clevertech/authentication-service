@@ -10,35 +10,48 @@ module.exports = env => {
     db = connection
   })
 
+  function sanitizeOutputs(f) {
+    return (key) => {
+      return f(key).then(res => {
+        res.id = res._id.toString()
+        return res
+      })
+    }
+  }
+
   return {
     init () {
       return Promise.resolve()
     },
-    findUserByEmail (email) {
+    findUserByEmail: sanitizeOutputs(function(email) {
       return db.collection('auth_users').findOne({ email })
-    },
-    findUserByEmailConfirmationToken (emailConfirmationToken) {
+    }),
+    findUserByEmailConfirmationToken: sanitizeOutputs(function(emailConfirmationToken) {
       return db.collection('auth_users').findOne({ emailConfirmationToken })
-    },
-    findUserById (id) {
+    }),
+    findUserById: sanitizeOutputs(function(id) {
       return db.collection('auth_users').findOne({ _id: mongo.ObjectID(id) })
-    },
+    }),
+    findUserByProviderLogin: sanitizeOutputs(function(login) {
+      return db.collection('auth_providers').findOne({ login }).then(function (provider) {
+        return db.collection('auth_users').findOne({ _id: mongo.ObjectID(provider.userId) })
+      })
+    }),
     insertUser (user) {
-      return db.collection('auth_users').insert(user)
+      return db.collection('auth_users').insert(user).then(res => {
+        return res.insertedIds[0]
+      })
     },
     updateUser (user) {
       return db.collection('auth_users')
-        .update({ _id: mongo.ObjectID(user._id) }, {$set: _.omit(user, '_id')})
+        .update({ _id: mongo.ObjectID(user.id) }, {$set: _.omit(user, 'id')})
         .then(res => {
           return res.result.nModified
         })
     },
     insertProvider (provider) {
-      return db.collection('auth_providers').insert(provider)
-    },
-    findUserByProviderLogin (login) {
-      return db.collection('auth_providers').findOne({ login }).then(function (provider) {
-        return db.collection('auth_users').findOne({ _id: mongo.ObjectID(provider.userId) })
+      return db.collection('auth_providers').insert(provider).then(res => {
+        return res.insertedIds[0]
       })
     }
   }

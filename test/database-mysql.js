@@ -4,7 +4,8 @@ const env = require('../src/utils/env')({
   DATABASE_URL: 'mysql://root:root@localhost/auth'
 })
 const adapter = require('../src/database/adapter')(env)
-const userId = parseInt(Math.random() * Number.MAX_SAFE_INTEGER)
+const randomId = parseInt(Math.random() * Number.MAX_SAFE_INTEGER)
+let userId
 
 test.serial('init()', t => {
   t.plan(1)
@@ -19,8 +20,10 @@ test.serial('init()', t => {
 
 test.serial('insertUser()', t => {
   t.plan(1)
-  return adapter.insertUser({ id: userId, email: `test+${userId}@clevertech.biz`, emailConfirmationToken: `token${userId}`})
+  return adapter.insertUser({ email: `test+${randomId}@clevertech.biz`, emailConfirmationToken: `token${randomId}`})
     .then(res => {
+      // Capture the inserted ID so we can use it later
+      userId = res
       // We're not concerned with the output; just that it didn't error
       t.pass()
     }).catch(err => {
@@ -30,7 +33,7 @@ test.serial('insertUser()', t => {
 
 test.serial('insertProvider()', t => {
   t.plan(1)
-  return adapter.insertProvider({ userId, login: `login${userId}`, data: 'placeholder string' })
+  return adapter.insertProvider({ userId, login: `login${randomId}`, data: {someKey: 'placeholder string'} })
     .then(res => {
       // We're not concerned with the output; just that it didn't error
       t.pass()
@@ -44,9 +47,9 @@ test('updateUser()', t => {
   return adapter.updateUser({ id: userId, emailConfirmed: 1, termsAndConditions: 1 })
     .then(updateCount => {
       return adapter.findUserById(userId).then(res => {
-        t.is(updateCount, 1)
-        t.is(res.emailConfirmed, 1)
-        t.is(res.termsAndConditions, "1")
+        t.truthy(updateCount)
+        t.truthy(res.emailConfirmed)
+        t.truthy(res.termsAndConditions)
       })
     }).catch(err => {
       t.falsy(err)
@@ -55,11 +58,11 @@ test('updateUser()', t => {
 
 test('findUserByEmail()', t => {
   t.plan(3)
-  return adapter.findUserByEmail(`test+${userId}@clevertech.biz`)
+  return adapter.findUserByEmail(`test+${randomId}@clevertech.biz`)
     .then(res => {
       t.is(res.id, `${userId}`)
-      t.is(res.email, `test+${userId}@clevertech.biz`)
-      t.is(res.emailConfirmationToken, `token${userId}`)
+      t.is(res.email, `test+${randomId}@clevertech.biz`)
+      t.is(res.emailConfirmationToken, `token${randomId}`)
     }).catch(err => {
       t.falsy(err)
     })
@@ -67,11 +70,11 @@ test('findUserByEmail()', t => {
 
 test('findUserByEmailConfirmationToken()', t => {
   t.plan(3)
-  return adapter.findUserByEmailConfirmationToken(`token${userId}`)
+  return adapter.findUserByEmailConfirmationToken(`token${randomId}`)
     .then(res => {
       t.is(res.id, `${userId}`)
-      t.is(res.email, `test+${userId}@clevertech.biz`)
-      t.is(res.emailConfirmationToken, `token${userId}`)
+      t.is(res.email, `test+${randomId}@clevertech.biz`)
+      t.is(res.emailConfirmationToken, `token${randomId}`)
     }).catch(err => {
       t.falsy(err)
     })
@@ -82,21 +85,20 @@ test('findUserById()', t => {
   return adapter.findUserById(userId)
     .then(res => {
       t.is(res.id, `${userId}`)
-      t.is(res.email, `test+${userId}@clevertech.biz`)
-      t.is(res.emailConfirmationToken, `token${userId}`)
+      t.is(res.email, `test+${randomId}@clevertech.biz`)
+      t.is(res.emailConfirmationToken, `token${randomId}`)
     }).catch(err => {
       t.falsy(err)
     })
 })
 
 test('findUserByProviderLogin()', t => {
-  t.plan(4)
-  return adapter.findUserByProviderLogin(`login${userId}`)
+  t.plan(3)
+  return adapter.findUserByProviderLogin(`login${randomId}`)
     .then(res => {
       t.is(res.id, `${userId}`)
-      t.is(res.email, `test+${userId}@clevertech.biz`)
-      t.is(res.emailConfirmationToken, `token${userId}`)
-      t.is(res.login, `login${userId}`)
+      t.is(res.email, `test+${randomId}@clevertech.biz`)
+      t.is(res.emailConfirmationToken, `token${randomId}`)
     }).catch(err => {
       t.falsy(err)
     })

@@ -28,6 +28,7 @@ module.exports = env => {
   }
 
   return {
+    engine: env('DATABASE_ENGINE'),
     init () {
       return Promise.resolve()
         .then(() => {

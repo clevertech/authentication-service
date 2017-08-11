@@ -101,7 +101,7 @@ exports.createRouter = (config = {}) => {
           return jwt.sign({ userId: user.id }, { expiresIn: '1h' }).then(token => baseUrl + '/twofactor?jwt=' + token)
         })
     }
-    return redirect(user)
+    return redirect(user).then(url => url)
   }
 
   const providerSignup = (user, res) => {
@@ -145,7 +145,7 @@ exports.createRouter = (config = {}) => {
     const token = req.query.jwt || req.body.jwt
     jwt.verify(token)
       .then(data => {
-        return database.findUserById(data.userId)
+        return database.findUserById(data.userId || data.user.id)
           .then(user => {
             if (!user) return Promise.reject(new Error('USER_NOT_FOUND'))
             req.user = user
@@ -325,8 +325,6 @@ exports.createRouter = (config = {}) => {
       .catch(next)
   })
 
-  const labelForQr = user => `${projectName} (${user.email})`
-
   const normalizePhone = str => {
     const match = str.match(/\d+/g)
     if (!match) return ''
@@ -349,7 +347,8 @@ exports.createRouter = (config = {}) => {
     const url = speakeasy.otpauthURL({
       secret: twofactorSecret,
       encoding: 'base32',
-      label: encodeURIComponent(labelForQr(user))
+      label: user.email,
+      issuer: projectName
     })
     qrForUrl(url)
       .then(qrCode => {
@@ -366,7 +365,7 @@ exports.createRouter = (config = {}) => {
 
   router.get('/configuretwofactor', authenticated, (req, res, next) => {
     const { user } = req
-    const secret = speakeasy.generateSecret({ name: labelForQr(user) })
+    const secret = speakeasy.generateSecret({ name: user.email })
     const jwtData = { userId: user.id, twofactorSecret: secret.base32 }
     jwt.sign(jwtData, { expiresIn: '1h' })
       .then((jwt) => {

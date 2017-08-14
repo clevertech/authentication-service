@@ -64,10 +64,7 @@ module.exports = env => {
     useRecoveryCode (userId, code) {
       return db.collection('auth_recovery_codes')
         .updateOne({ userId, code, used: false }, { used: true })
-        .then(updateCount => {
-          console.log(updateCount)
-          return !!updateCount
-        })
+        .then(res => !!res.result.nModified)
     },
     insertUser (user) {
       return db.collection('auth_users').insert(user).then(res => {

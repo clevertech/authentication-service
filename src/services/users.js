@@ -40,7 +40,7 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
           // See https://en.wikipedia.org/wiki/Timing_attack
           return passwords.check(email, password, (user && user.password) || invalidHash)
             .then(ok => user && ok ? user : reject('INVALID_CREDENTIALS'))
-            .catch(err => Promise.reject(err))
+            .catch(err => reject(err))
         })
     },
     createRecoveryCodes (user) {

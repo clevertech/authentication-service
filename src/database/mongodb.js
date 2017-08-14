@@ -46,7 +46,7 @@ module.exports = env => {
       })
     }),
     findRecoveryCodesByUserId (userId) {
-      return db.collection('auth_recovery_codes').find({ userId })
+      return db.collection('auth_recovery_codes').find({ userId }).toArray()
     },
     insertRecoveryCodes (userId, codes) {
       return db.collection('auth_recovery_codes').deleteMany({ userId })
@@ -63,7 +63,7 @@ module.exports = env => {
     },
     useRecoveryCode (userId, code) {
       return db.collection('auth_recovery_codes')
-        .updateOne({ userId, code, used: false }, { used: true })
+        .updateOne({ userId, code: code.toLowerCase(), used: false }, { $set: { used: true } })
         .then(res => !!res.result.nModified)
     },
     insertUser (user) {

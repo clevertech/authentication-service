@@ -151,7 +151,7 @@ module.exports = env => {
     },
     useRecoveryCode (userId, code) {
       return db('auth_recovery_codes')
-        .where({ userId, code, used: false })
+        .where({ userId, code: code.toLowerCase(), used: false })
         .update({ used: true })
         .then(updateCount => !!updateCount)
     },

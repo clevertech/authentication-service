@@ -566,9 +566,15 @@ exports.createRouter = (config = {}) => {
           return redirect(user)
             .then(url => res.redirect(url))
         } else {
-          return redirect(user)
-            .then(url => res.redirect(url))
-          return Promise.reject(new Error('INVALID_TOKEN'))
+          return database.useRecoveryCode(user.id, token)
+            .then(recoveryValidates => {
+              if(recoveryValidates) {
+                return redirect(user)
+                  .then(url => res.redirect(url))
+              } else {
+                return Promise.reject(new Error('INVALID_TOKEN'))
+              }
+            })
         }
       })
       .catch(next)

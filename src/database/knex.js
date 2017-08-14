@@ -153,7 +153,7 @@ module.exports = env => {
       return db('auth_recovery_codes')
         .where({ userId, code, used: false })
         .update({ used: true })
-        .then(updateCount => updateCount)
+        .then(updateCount => !!updateCount)
     },
     insertUser (user) {
       user = _.omit(user, ['id', '_id']);
@@ -174,7 +174,6 @@ module.exports = env => {
     }
   }
 
-  adapter.useRecoveryCode('e4b279f8-6550-472d-ae96-8bacba1b518f', '7e429e32')
   return adapter
 }
 

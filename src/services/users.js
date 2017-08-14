@@ -1,11 +1,11 @@
 const passwords = require('../utils/passwords')
 const querystring = require('querystring')
 const uuid = require('uuid/v4')
+const async = require('async')
+const _ = require('lodash')
 
-let invalidHash = null
-passwords.hash('invalidEmail', 'anypasswordyoucanimagine')
-  .then(hash => (invalidHash = hash))
-  .catch(err => console.error(err))
+const invalidHash = null
+const NUMBER_OF_RECOVERY_CODES = 10
 
 const normalizeEmail = email => email.toLowerCase()
 
@@ -41,6 +41,32 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
           // See https://en.wikipedia.org/wiki/Timing_attack
           return passwords.check(email, password, (user && user.password) || invalidHash)
             .then(ok => user && ok ? user : reject('INVALID_CREDENTIALS'))
+        })
+    },
+    createRecovery (user, client) {
+      return Promise.all(_.map(Array(NUMBER_OF_RECOVERY_CODES), (code) => {
+        return passwords.hash(user.email, random())
+      })).then((codes) => {
+        return database.insertRecoveryCodes(user.id, codes)
+      })
+    },
+    checkRecovery (user, recoveryCode, client) {
+      database.findRecoveryCodesByUserId(user.id)
+        .then(hashedCodes => {
+          async.parallel(_.map(hashedCodes, function(hashedCode) {
+            return (next) => {
+              return passwords.check(user.email, recoveryCode, hashedCode)
+                then(ok => {
+                  return next(null, ok)
+                })
+                .catch(err => {
+                  //console.log(err)
+                  return next(err)
+                })
+            }
+          }), (err, results) => {
+            console.log(err, results)
+          })
         })
     },
     register (params, client) {

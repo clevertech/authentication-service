@@ -95,6 +95,15 @@ module.exports = env => {
             }))
           })
         })
+        .then(() => {
+          return db.schema.hasTable('auth_recovery_codes').then(tableExists => {
+            return tableExists ? Promise.resolve() : createTableIfNotExists('auth_recovery_codes', _.once(table => {
+              table.uuid('userId').notNullable()
+              table.foreign('userId').references('auth_users.id').onDelete('cascade')
+              table.string('code').notNullable()
+            }))
+          })
+        })
         .then(() => addColumn('auth_users', 'twofactorSecret', table => table.string('twofactorSecret')))
         .then(() => addColumn('auth_users', 'twofactorPhone', table => table.string('twofactorPhone')))
     },
@@ -112,6 +121,32 @@ module.exports = env => {
         .where({ login })
         .leftJoin('auth_users', 'auth_providers.userId', 'auth_users.id')
         .then(last)
+    },
+    findRecoveryCodesByUserId (userId) {
+      return db('auth_recovery_codes')
+        .where({ userId })
+        .then(codes => _.map(codes, code => code.code))
+    },
+    insertRecoveryCodes (userId, codes) {
+      return db.transaction(trx => {
+        return db('auth_recovery_codes')
+          .where({ userId })
+          .del()
+          .then(res => {
+            return Promise.all(_.map(codes, (code) => {
+              return db('auth_recovery_codes')
+                .transacting(trx)
+                .insert({ userId, code })
+            }))
+          })
+          .then(trx.commit)
+          .catch(trx.rollback)
+      }).then(() => {
+        return Promise.resolve()
+      }).catch((err) => {
+        console.error(err)
+        return Promise.reject()
+      })
     },
     insertUser (user) {
       user = _.omit(user, ['id', '_id']);

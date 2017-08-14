@@ -120,7 +120,7 @@ exports.createRouter = (config = {}) => {
 
   const router = express.Router()
   router.use(bodyParser.urlencoded({ extended: false }))
-  router.use(recaptcha.middleware())
+  //router.use(recaptcha.middleware())
   router.use(i18n.init)
 
   const availableProviders = Object.keys(providers).reduce((obj, provider) => {
@@ -505,6 +505,21 @@ exports.createRouter = (config = {}) => {
       redirectToDone(res, { info: 'TWO_FACTOR_AUTHENTICATION_DISABLED' })
     })
     .catch(next)
+  })
+
+  router.get('/twofactorrecoverycodes', authenticated, (req, res, next) => {
+
+  })
+
+  router.get('/twofactorrecoveryregenerate', authenticated, (req, res, next) => {
+    const { user } = req
+    users.createRecovery(user)
+      .then(result => {
+        redirectToDone(res, {
+          info: 'RECOVERY_CODES_REGENERATED'
+        })
+      })
+      .catch(next)
   })
 
   router.get('/twofactor', authenticated, (req, res, next) => {

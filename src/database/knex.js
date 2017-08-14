@@ -60,7 +60,7 @@ module.exports = env => {
                 }, Promise.resolve([]))
                 .then(missing => {
                   if (missing) {
-                    return db.schema.alterTable(
+                    return db.schema.createTableIfNotExists(
                       'auth_users',
                       _.once(table => {
                         missing.forEach(fieldName => table.string(fieldName))

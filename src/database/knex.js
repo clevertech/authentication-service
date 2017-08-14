@@ -27,7 +27,7 @@ module.exports = env => {
       .then(exists => (!exists && db.schema.alterTable(table, callback)))
   }
 
-  const adapter = {
+  return {
     engine: env('DATABASE_ENGINE'),
     init () {
       return Promise.resolve()
@@ -173,7 +173,5 @@ module.exports = env => {
       return db('auth_providers').insert(provider)
     }
   }
-
-  return adapter
 }
 

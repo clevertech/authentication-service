@@ -160,7 +160,7 @@ exports.createRouter = (config = {}) => {
       })
   }
 
-  const recoveryCodes = (req, res, next) => {
+  const fetchRecoveryCodes = (req, res, next) => {
     return database.findRecoveryCodesByUserId(req.user.id)
       .then(codes => {
         if (!codes) return Promise.reject(new Error('RECOVERY_CODES_NOT_FOUND'))
@@ -516,7 +516,7 @@ exports.createRouter = (config = {}) => {
     .catch(next)
   })
 
-  router.get('/twofactorrecoverycodes', authenticated, recoveryCodes, (req, res, next) => {
+  router.get('/twofactorrecoverycodes', authenticated, fetchRecoveryCodes, (req, res, next) => {
     const { user, jwt } = req
     renderFile(req, res, next, 'twofactorcodes.html', {
       title: 'Your recovery codes',

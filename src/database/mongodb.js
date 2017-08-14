@@ -45,6 +45,30 @@ module.exports = env => {
         return db.collection('auth_users').findOne({ _id: mongo.ObjectID(provider.userId) })
       })
     }),
+    findRecoveryCodesByUserId (userId) {
+      return db.collection('auth_recovery_codes').find({ userId })
+    },
+    insertRecoveryCodes (userId, codes) {
+      return db.collection('auth_recovery_codes').deleteMany({ userId })
+        .then(res => {
+          return Promise.all(_.map(codes, (code) => {
+            return db.collection('auth_recovery_codes').insertOne({ userId, code, used: false })
+          }))
+        }).then(() => {
+          return Promise.resolve(_.map(codes, code => ({ code, used: false })))
+        }).catch((err) => {
+          console.error(err)
+          return Promise.reject()
+        })
+    },
+    useRecoveryCode (userId, code) {
+      return db.collection('auth_recovery_codes')
+        .updateOne({ userId, code, used: false }, { used: true })
+        .then(updateCount => {
+          console.log(updateCount)
+          return !!updateCount
+        })
+    },
     insertUser (user) {
       return db.collection('auth_users').insert(user).then(res => {
         return res.insertedIds[0]

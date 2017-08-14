@@ -27,7 +27,7 @@ module.exports = env => {
       .then(exists => (!exists && db.schema.alterTable(table, callback)))
   }
 
-  return {
+  const adapter = {
     engine: env('DATABASE_ENGINE'),
     init () {
       return Promise.resolve()
@@ -101,6 +101,7 @@ module.exports = env => {
               table.uuid('userId').notNullable()
               table.foreign('userId').references('auth_users.id').onDelete('cascade')
               table.string('code').notNullable()
+              table.boolean('used').notNullable().defaultTo(false)
             }))
           })
         })
@@ -125,7 +126,7 @@ module.exports = env => {
     findRecoveryCodesByUserId (userId) {
       return db('auth_recovery_codes')
         .where({ userId })
-        .then(codes => _.map(codes, code => code.code))
+        .then(codes => codes)
     },
     insertRecoveryCodes (userId, codes) {
       return db.transaction(trx => {
@@ -142,11 +143,17 @@ module.exports = env => {
           .then(trx.commit)
           .catch(trx.rollback)
       }).then(() => {
-        return Promise.resolve()
+        return Promise.resolve(_.map(codes, code => ({ code, used: false })))
       }).catch((err) => {
         console.error(err)
         return Promise.reject()
       })
+    },
+    useRecoveryCode (userId, code) {
+      return db('auth_recovery_codes')
+        .where({ userId, code, used: false })
+        .update({ used: true })
+        .then(updateCount => updateCount)
     },
     insertUser (user) {
       user = _.omit(user, ['id', '_id']);
@@ -166,4 +173,8 @@ module.exports = env => {
       return db('auth_providers').insert(provider)
     }
   }
+
+  adapter.useRecoveryCode('e4b279f8-6550-472d-ae96-8bacba1b518f', '7e429e32')
+  return adapter
 }
+

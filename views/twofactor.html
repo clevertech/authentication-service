@@ -18,7 +18,7 @@
         <input type="hidden" name="jwt" value="<%= jwt %>">
         <div class="ui stacked segment aligned center">
           <% if (user.twofactor === 'qr') { %>
-            <p>User your app to enter a valid authentication code.</p>
+            <p>Use your app to enter a valid authentication code.</p>
           <% } else if (user.twofactor === 'sms') { %>
             <p>We have sent an SMS to: <strong><%= obfuscatePhone(user.twofactorPhone) %></strong><br>
           <% } %>

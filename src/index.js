@@ -160,6 +160,15 @@ exports.createRouter = (config = {}) => {
       })
   }
 
+  const recoveryCodes = (req, res, next) => {
+    return database.findRecoveryCodesByUserId(req.user.id)
+      .then(codes => {
+        if (!codes) return Promise.reject(new Error('RECOVERY_CODES_NOT_FOUND'))
+        req.user.recoveryCodes = codes
+        next()
+      })
+  }
+
   const renderFile = (req, res, next, file, data) => {
     const { baseUrl, query } = req
     const { error, info, provider, token } = query
@@ -507,16 +516,25 @@ exports.createRouter = (config = {}) => {
     .catch(next)
   })
 
-  router.get('/twofactorrecoverycodes', authenticated, (req, res, next) => {
-
+  router.get('/twofactorrecoverycodes', authenticated, recoveryCodes, (req, res, next) => {
+    const { user, jwt } = req
+    renderFile(req, res, next, 'twofactorcodes.html', {
+      title: 'Your recovery codes',
+      codes: user.recoveryCodes,
+      user,
+      jwt
+    })
   })
 
   router.get('/twofactorrecoveryregenerate', authenticated, (req, res, next) => {
-    const { user } = req
-    users.createRecovery(user)
-      .then(result => {
-        redirectToDone(res, {
-          info: 'RECOVERY_CODES_REGENERATED'
+    const { user, jwt } = req
+    users.createRecoveryCodes(user)
+      .then(codes => {
+        return renderFile(req, res, next, 'twofactorcodes.html', {
+          title: 'Your recovery codes',
+          codes,
+          user,
+          jwt
         })
       })
       .catch(next)
@@ -548,6 +566,8 @@ exports.createRouter = (config = {}) => {
           return redirect(user)
             .then(url => res.redirect(url))
         } else {
+          return redirect(user)
+            .then(url => res.redirect(url))
           return Promise.reject(new Error('INVALID_TOKEN'))
         }
       })

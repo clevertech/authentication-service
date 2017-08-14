@@ -10,7 +10,7 @@
   "EMAIL_CONFIRMATION_SENT": "Before signing in, please confirm your email address. Check your inbox and follow the instructions",
   "INTERNAL_ERROR": "Internal error",
   "UNKNOWN_ERROR": "Unknown error",
-  "EMAIL_CONFIRMED": "Thank you! Your email address is not confirmed. Please sign in",
+  "EMAIL_CONFIRMED": "Thank you! Your email address is now confirmed. Please sign in",
   "FORM_VALIDATION_FAILED": "The form contains errors",
   "RECAPTCHA_VALIDATION_FAILED": "Recaptcha validation failed",
   "INVALID_AUTHENTICATION_CODE": "Invalid authentication code",

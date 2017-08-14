@@ -120,7 +120,7 @@ exports.createRouter = (config = {}) => {
 
   const router = express.Router()
   router.use(bodyParser.urlencoded({ extended: false }))
-  //router.use(recaptcha.middleware())
+  router.use(recaptcha.middleware())
   router.use(i18n.init)
 
   const availableProviders = Object.keys(providers).reduce((obj, provider) => {

@@ -13,8 +13,12 @@ module.exports = env => {
   function sanitizeOutputs(f) {
     return (key) => {
       return f(key).then(res => {
-        res.id = res._id.toString()
-        return res
+        if (res) {
+          res.id = res._id.toString()
+          return res
+        } else {
+          return null
+        }
       })
     }
   }
@@ -35,6 +39,9 @@ module.exports = env => {
     }),
     findUserByProviderLogin: sanitizeOutputs(function(login) {
       return db.collection('auth_providers').findOne({ login }).then(function (provider) {
+        if(!provider) {
+          return Promise.resolve(null)
+        }
         return db.collection('auth_users').findOne({ _id: mongo.ObjectID(provider.userId) })
       })
     }),

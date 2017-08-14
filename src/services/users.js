@@ -4,7 +4,7 @@ const uuid = require('uuid/v4')
 const async = require('async')
 const _ = require('lodash')
 
-const invalidHash = null
+const invalidHash = ''
 const NUMBER_OF_RECOVERY_CODES = 10
 
 const normalizeEmail = email => email.toLowerCase()
@@ -41,6 +41,7 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
           // See https://en.wikipedia.org/wiki/Timing_attack
           return passwords.check(email, password, (user && user.password) || invalidHash)
             .then(ok => user && ok ? user : reject('INVALID_CREDENTIALS'))
+            .catch(err => Promise.reject(err))
         })
     },
     createRecoveryCodes (user) {
@@ -48,6 +49,7 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
       return database.insertRecoveryCodes(user.id, codes)
     },
     register (params, client) {
+      console.log('registering a user...')
       const id = uuid()
       const email = normalizeEmail(params.email)
       const { provider } = params
@@ -55,6 +57,7 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
       if (!params.image) delete params.image // removes empty strings
       return createToken()
         .then(emailConfirmationToken => {
+          console.log('made a token?')
           return database.findUserByEmail(email)
             .then(exists => {
               if (exists) return reject('USER_ALREADY_EXISTS')
@@ -65,6 +68,7 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
               }
             })
             .then(() => {
+              console.log('provider!', provider)
               return (provider ? jwt.verify(provider) : Promise.resolve())
                 .then(userInfo => {
                   const validation = validations.validate(provider, 'register', params)
@@ -74,6 +78,7 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
                   const user = validation.value
                   return Promise.resolve()
                     .then(() => {
+                      console.log('they got a image?', user.image)
                       if (user.image) {
                         return mediaClient.upload({
                           buffer: user.image,
@@ -91,11 +96,13 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
                       }
                     })
                     .then(() => {
+                      console.log('makin a user')
                       return database.insertUser(Object.assign({}, user, {
                         id,
                         emailConfirmationToken
                       }))
                         .then(() => {
+                          console.log('makin a provider')
                           const user = userInfo && userInfo.user
                           if (user) return database.insertProvider({ userId: id, login: user.login, data: user.data || {} })
                         })

@@ -57,10 +57,10 @@ module.exports = env => {
       const { fields } = this.forms(provider)[formName]
       const keys = Object.keys(fields).reduce((keys, key) => {
         const arr = fields[key]
-        const constraint = Joi.string().trim()
+        let constraint = Joi.string().trim()
         arr.indexOf('empty') >= 0
-          ? constraint.required()
-          : constraint.optional()
+          ? constraint = constraint.required()
+          : constraint = constraint.optional()
         if (arr.indexOf('email') >= 0) constraint.email().lowercase()
         keys[key] = constraint
         return keys

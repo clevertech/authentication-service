@@ -1,6 +1,7 @@
 const knex = require('knex')
 const constants = require('../constants')
 const _ = require('lodash')
+const uuid = require('uuid/v4')
 
 module.exports = env => {
   const db = knex({
@@ -27,6 +28,7 @@ module.exports = env => {
   }
 
   return {
+    engine: env('DATABASE_ENGINE'),
     init () {
       return Promise.resolve()
         .then(() => {
@@ -105,20 +107,28 @@ module.exports = env => {
     findUserById (id) {
       return db('auth_users').where({ id }).select().then(last)
     },
-    insertUser (user) {
-      return db('auth_users').insert(user)
-    },
-    updateUser (user) {
-      return db('auth_users').where('id', '=', user.id).update(user)
-    },
-    insertProvider (provider) {
-      return db('auth_providers').insert(provider)
-    },
     findUserByProviderLogin (login) {
       return db('auth_providers')
         .where({ login })
         .leftJoin('auth_users', 'auth_providers.userId', 'auth_users.id')
         .then(last)
+    },
+    insertUser (user) {
+      user = _.omit(user, ['id', '_id']);
+      const userId = uuid()
+      user.id = userId
+      return db('auth_users').insert(user).then(res => {
+        return userId
+      })
+    },
+    updateUser (user) {
+      return db('auth_users').where('id', '=', user.id).update(user)
+    },
+    insertProvider (provider) {
+      if(env('DATABASE_ENGINE') === 'mysql') {
+        provider.data = JSON.stringify(provider.data)
+      }
+      return db('auth_providers').insert(provider)
     }
   }
 }

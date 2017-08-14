@@ -158,14 +158,6 @@ test('validate register form without provider', t => {
       }
     },
     {
-      message: '"termsAndConditions" is required',
-      path: 'termsAndConditions',
-      type: 'any.required',
-      context: {
-        key: 'termsAndConditions'
-      }
-    },
-    {
       message: '"firstName" is required',
       path: 'firstName',
       type: 'any.required',
@@ -195,14 +187,6 @@ test('validate register form with provider', t => {
       type: 'any.required',
       context: {
         key: 'email'
-      }
-    },
-    {
-      message: '"termsAndConditions" is required',
-      path: 'termsAndConditions',
-      type: 'any.required',
-      context: {
-        key: 'termsAndConditions'
       }
     },
     {

@@ -1,6 +1,8 @@
 const test = require('ava')
 const fetch = require('./_fetch')
 
+require('../').startServer() // starts the app server
+
 test('root path', t => {
   return fetch('/auth')
     .then(response => {

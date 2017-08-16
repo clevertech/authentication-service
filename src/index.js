@@ -1,5 +1,17 @@
 #!/usr/bin/env node
 
+process.on('uncaughtRejection', (err) => {
+  console.log('UNCAUGHT REJECTION', err)
+})
+process.on('uncaughtException', (err) => {
+  console.log('UNCAUGHT Exception', err)
+})
+process.on('warning', (warning) => {
+  console.warn(warning.name);    // Print the warning name
+  console.warn(warning.message); // Print the warning message
+  console.warn(warning.stack);   // Print the stack trace
+})
+
 const querystring = require('querystring')
 const path = require('path')
 const express = require('express')
@@ -120,7 +132,7 @@ exports.createRouter = (config = {}) => {
 
   const router = express.Router()
   router.use(bodyParser.urlencoded({ extended: false }))
-  router.use(recaptcha.middleware())
+  //router.use(recaptcha.middleware())
   router.use(i18n.init)
 
   const availableProviders = Object.keys(providers).reduce((obj, provider) => {
@@ -244,9 +256,11 @@ exports.createRouter = (config = {}) => {
   })
 
   router.post('/register', (req, res, next) => {
+    console.log(req.body, req.headers)
     const { body } = req
     users.register(body, client(req))
       .then(user => {
+        console.log('registered the user')
         if (emailConfirmation && user.password) {
           return res.redirect(req.baseUrl + '/signin?info=EMAIL_CONFIRMATION_SENT')
         }
@@ -256,7 +270,10 @@ exports.createRouter = (config = {}) => {
         return redirect(user)
           .then(url => res.redirect(url))
       })
-      .catch(next)
+      .catch((err) => {
+        console.log('Err happened?', err)
+        res.end()
+      })
   })
 
   router.get('/resetpassword', (req, res, next) => {
@@ -641,3 +658,4 @@ if (require.main === module) {
     winston.info(`Listening on port ${port}! Visit http://127.0.0.1:${port}/auth`)
   })
 }
+

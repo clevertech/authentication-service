@@ -2,8 +2,6 @@ const fetch = require('node-fetch')
 const querystring = require('querystring')
 const baseURL = `http://127.0.0.1:${process.env.MICROSERVICE_PORT || 3000}`
 
-require('../').startServer() // starts the app server
-
 module.exports = (path, options) => {
   const body = options && options.body
   if (Object.prototype.toString.call(body) === '[object Object]') {

@@ -48,17 +48,14 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
       return database.insertRecoveryCodes(user.id, codes)
     },
     register (params, client) {
-      console.log('bouta register')
       const email = normalizeEmail(params.email)
       const { provider } = params
       delete params.provider
       if (!params.image) delete params.image // removes empty strings
       return createToken()
         .then(emailConfirmationToken => {
-          console.log('made a token')
           return database.findUserByEmail(email)
             .then(exists => {
-              console.log('user exists?', exists)
               if (exists) return reject('USER_ALREADY_EXISTS')
               if (!params.password && !provider) return reject('PASSWORD_REQUIRED')
               if (params.password) {
@@ -67,10 +64,8 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
               }
             })
             .then(() => {
-              console.log('hashed the pass')
               return (provider ? jwt.verify(provider) : Promise.resolve())
                 .then(userInfo => {
-                  console.log('userInfo:', userInfo)
                   const validation = validations.validate(provider, 'register', params)
                   if (validation.error) {
                     return reject('FORM_VALIDATION_FAILED: ' + validation.error.details.map(detail => detail.message).join(', '))
@@ -78,7 +73,6 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
                   const user = validation.value
                   return Promise.resolve()
                     .then(() => {
-                      console.log('user image?', user.image)
                       if (user.image) {
                         return mediaClient.upload({
                           buffer: user.image,
@@ -96,12 +90,10 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
                       }
                     })
                     .then(() => {
-                      console.log('about to insert')
                       return database.insertUser(Object.assign({}, user, {
                         emailConfirmationToken
                       }))
                         .then((id) => {
-                          console.log('inserted:', id)
                           const user = userInfo && userInfo.user
                           if (user) return database.insertProvider({ userId: id, login: user.login, data: user.data || {} })
                         })
@@ -110,7 +102,6 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
             })
             .then(() => database.findUserByEmail(email))
             .then(user => {
-              console.log('found the user by email:', email)
               sendEmail({ to: email }, 'welcome', {
                 user,
                 name: userName(user),
@@ -146,7 +137,6 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
                     projectName,
                     link: baseUrl + '/reset?' + querystring.stringify({ emailConfirmationToken })
                   })
-                  // console.log('link', baseUrl + '/reset?' + querystring.stringify({ emailConfirmationToken }))
                 })
             })
         })

@@ -1,7 +1,9 @@
 const test = require('ava')
 const fetch = require('./_fetch')
-
-require('../').startServer() // starts the app server
+const env = {
+  JWT_ALGORITHM: 'HS256',
+  JWT_SECRET: 'shhhh'
+}
 
 test('root path', t => {
   return fetch('/auth')

@@ -2,6 +2,12 @@ const test = require('ava')
 const superagent = require('superagent')
 const baseUrl = `http://127.0.0.1:${process.env.MICROSERVICE_PORT || 3000}`
 
+const env = {
+  JWT_ALGORITHM: 'HS256',
+  JWT_SECRET: 'shhhh'
+}
+require('../').startServer(env) // starts the app server
+
 test('GET /auth/register', t => {
   t.plan(2)
   return superagent.get(`${baseUrl}/auth/register`)
@@ -27,10 +33,9 @@ test('POST /auth/register', t => {
     .set('user-agent', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',)
     .set('connection', 'keep-alive')
     .then((response) => {
-      
+      t.truthy(response.text.indexOf('<p>Before signing in, please confirm your email address.') >= 0)
     })
     .catch((error) => {
-      console.log(error)
       t.falsy(error)
     })
 })

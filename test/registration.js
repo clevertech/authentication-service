@@ -74,13 +74,13 @@ test.serial('POST /auth/signin', t => {
 })
 
 // Create a variable to test that two-factor authentication works
-var _2FAtoken
+let _2FAtoken
 // Store the userId for later when we log in with our 2FA key
 let userId
 
 // Mark the account as having QR twofactor authentication
 // Create two factor recovery codes
-test.serial('POST /auth/twofactorrecoveryregenerate', t => {
+test.serial('GET /auth/twofactorrecoveryregenerate', t => {
   return db.findUserByEmail(`test+${r}@clevertech.biz`)
   .then(user => {
     userId = user.id
@@ -105,6 +105,26 @@ test.serial('POST /auth/twofactorrecoveryregenerate', t => {
             t.falsy(error)
           })
       })
+  })
+})
+
+// Test that we can find the same 2FA codes that were just generated via POST /auth/twofactorrecoverycodes
+test.serial('GET /auth/twofactorrecoverycodes', t => {
+  return superagent.get(`${baseUrl}/auth/twofactorrecoverycodes?jwt=${_jwtToken}`)
+  .then((response) => {
+    const body = response.text
+    const codeDiv = '<div class="column twofactorcode">'
+    const codeDivLocation = body.indexOf(codeDiv)
+    // Make sure the div actually showed up in the response
+    t.truthy(codeDivLocation >= 0)
+
+    const new2FAtoken = body.substring(codeDivLocation+codeDiv.length, codeDivLocation+codeDiv.length+8)
+    // Make sure that the recovery code is an 8-character hexadecimal string
+    t.truthy(/^[0-9A-F]{8}$/.test(new2FAtoken))
+    t.is(_2FAtoken, new2FAtoken)
+  })
+  .catch((error) => {
+    t.falsy(error)
   })
 })
 

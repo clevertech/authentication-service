@@ -236,6 +236,10 @@ exports.createRouter = (config = {}) => {
       .catch(next)
   })
 
+  router.get('/landing', authenticated, (req, res, next) => {
+    res.status(200).send(req.query.jwt)
+  })
+
   router.get('/register', (req, res, next) => {
     renderIndex(req, res, next, {
       title: 'Register',

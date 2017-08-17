@@ -1,9 +1,5 @@
 const test = require('ava')
 const fetch = require('./_fetch')
-const env = {
-  JWT_ALGORITHM: 'HS256',
-  JWT_SECRET: 'shhhh'
-}
 
 test('root path', t => {
   return fetch('/auth')

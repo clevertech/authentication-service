@@ -9,7 +9,7 @@
     "start-dev": "better-npm-run start-dev",
     "test": "DATABASE_URL=postgresql://localhost/pnp PORT=3001 ava --verbose --fail-fast",
     "test:watch": "DATABASE_URL=postgresql://localhost/pnp PORT=3001 ava --verbose --fail-fast --watch",
-    "test:dev": "DATABASE_URL=postgresql://authtest:authtest@localhost/auth AUTH_SIGNUP_FIELDS=firstName,lastName,username AUTH_REDIRECT_URL=/auth/landing PORT=3001 ava --verbose",
+    "test:dev": "NODE_ENV=test DATABASE_URL=postgresql://authtest:authtest@localhost/auth AUTH_SIGNUP_FIELDS=firstName,lastName,username AUTH_REDIRECT_URL=/auth/landing AUTH_BASE_URL=http://localhost:3000/auth SYMMETRIC_KEY=ee3b03dd1808d4172ee98ae6557c673c PORT=3001 ava --verbose",
     "lint": "standard"
   },
   "betterScripts": {

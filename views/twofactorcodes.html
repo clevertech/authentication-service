@@ -20,7 +20,7 @@
         <div class="ui stacked segment aligned center">
           <div class="ui two column padded grid">
             <% for (const code of codes) { %>
-              <div class="column <%= code.used ? 'strikethrough' : '' %>"><%= code.code.toUpperCase() %></div>
+              <div class="column twofactorcode<%= code.used ? ' strikethrough' : '' %>"><%= code.code.toUpperCase() %></div>
               <% } %>
           </div>
 

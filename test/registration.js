@@ -45,7 +45,7 @@ test.serial('POST /auth/register', t => {
 })
 
 // Create a JWT variable, for use with all of our post-signin requests
-let token
+let _jwtToken
 
 // Mark that account as having a confirmed email address
 // Then sign into that account
@@ -54,16 +54,16 @@ test.serial('POST /auth/signin', t => {
   .then(user => {
     user.emailConfirmed = true
     return db.updateUser(user)
-      .then(success => {
+      .then((success) => {
         t.truthy(success)
         return superagent.post(`${baseUrl}/auth/signin`)
           .send(`email=test%2B${r}@clevertech.biz`)
           .send('password=thisistechnicallyapassword')
           .then((response) => {
             // Store the JWT for later use
-            token = response.text
+            _jwtToken = response.body
             // Confirm that the JWT does indeed contain the data we want
-            const decoded = jwt.decode(token)
+            const decoded = jwt.decode(_jwtToken)
             t.is(decoded.user.email, `test+${r}@clevertech.biz`)
           })
           .catch((error) => {
@@ -71,4 +71,67 @@ test.serial('POST /auth/signin', t => {
           })
       })
   })
+})
+
+// Create a variable to test that two-factor authentication works
+var _2FAtoken
+// Store the userId for later when we log in with our 2FA key
+let userId
+
+// Mark the account as having QR twofactor authentication
+// Create two factor recovery codes
+test.serial('POST /auth/twofactorrecoveryregenerate', t => {
+  return db.findUserByEmail(`test+${r}@clevertech.biz`)
+  .then(user => {
+    userId = user.id
+    user.twofactor = 'qr'
+    user.twofactorSecret='af4e0e215741432aa2d3aa8fbfa8f15da6ae3b1f90df15498aa471792728e513cd4d3add6235591354ec552336a1292c7b60499a.a3fe82198c6eb29349ffbed773701230.a261c30328f73ec693b9a1b208eb4935'
+    return db.updateUser(user)
+      .then((success) => {
+        t.truthy(success)
+        return superagent.get(`${baseUrl}/auth/twofactorrecoveryregenerate?jwt=${_jwtToken}`)
+          .then((response) => {
+            const body = response.text
+            const codeDiv = '<div class="column twofactorcode">'
+            const codeDivLocation = body.indexOf(codeDiv)
+            // Make sure the div actually showed up in the response
+            t.truthy(codeDivLocation >= 0)
+
+            _2FAtoken = body.substring(codeDivLocation+codeDiv.length, codeDivLocation+codeDiv.length+8)
+            // Make sure that the recovery code is an 8-character hexadecimal string
+            t.truthy(/^[0-9A-F]{8}$/.test(_2FAtoken))
+          })
+          .catch((error) => {
+            t.falsy(error)
+          })
+      })
+  })
+})
+
+// Confirm that the code captured above allows us to sign in
+test.serial('POST /auth/twofactor', t => {
+  return superagent.post(`${baseUrl}/auth/signin`)
+    .send(`email=test%2B${r}@clevertech.biz`)
+    .send('password=thisistechnicallyapassword')
+    .then((response) => {
+      t.truthy(response.redirects)
+      t.truthy(response.redirects[0])
+      const redirect = response.redirects[0]
+      // Store the new JWT
+      _jwtToken = redirect.substring(redirect.indexOf('?jwt=')+5, redirect.length)
+      // Confirm that the JWT does indeed contain the data we want
+      const decoded = jwt.decode(_jwtToken)
+      t.is(decoded.userId, userId)
+
+      return superagent.post(`${baseUrl}/auth/twofactor?jwt=${_jwtToken}`)
+        .send(`token=${_2FAtoken}`)
+        .then((response) => {
+            // Confirm that the JWT does indeed contain the data we want
+            const decoded = jwt.decode(response.body)
+            t.is(decoded.user.email, `test+${r}@clevertech.biz`)
+        })
+        .catch((error) => {
+          t.falsy(error)
+        })
+    })
 })

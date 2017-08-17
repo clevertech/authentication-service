@@ -56,7 +56,6 @@ exports.createRouter = (config = {}) => {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' }
     })
-    // .then(res => res.text()).then(text => console.log(text))
     .catch((err) => {
       winston.error(err)
       return Promise.reject(err)
@@ -237,7 +236,7 @@ exports.createRouter = (config = {}) => {
   })
 
   router.get('/landing', authenticated, (req, res, next) => {
-    res.status(200).send(req.query.jwt)
+    res.status(200).json(req.query.jwt)
   })
 
   router.get('/register', (req, res, next) => {

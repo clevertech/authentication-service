@@ -179,3 +179,31 @@ test.serial('POST /auth/twofactor valid code', t => {
         })
     })
 })
+
+// Confirm that the code captured above DOES NOT allow us to sign in a second time
+test.serial('POST /auth/twofactor invalid code', t => {
+  return superagent.post(`${baseUrl}/auth/signin`)
+    .send(`email=test%2B${r}@clevertech.biz`)
+    .send('password=thisistechnicallyapassword')
+    .then((response) => {
+      t.truthy(response.redirects)
+      t.truthy(response.redirects[0])
+      const redirect = response.redirects[0]
+      // Store the new JWT
+      _jwtToken = redirect.substring(redirect.indexOf('?jwt=')+5, redirect.length)
+      // Confirm that the JWT does indeed contain the data we want
+      const decoded = jwt.decode(_jwtToken)
+      t.is(decoded.userId, userId)
+
+      return superagent.post(`${baseUrl}/auth/twofactor?jwt=${_jwtToken}`)
+        .send(`token=${_2FAtoken}`)
+        .then((response) => {
+          // Confirm that we were redirected
+          t.truthy(response.redirects.length)
+        })
+        .catch((error) => {
+          console.log('Error:', error)
+          t.truthy(error)
+        })
+    })
+})

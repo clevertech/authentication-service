@@ -13,6 +13,7 @@ const useragent = require('useragent')
 const speakeasy = require('speakeasy')
 const QRCode = require('qrcode')
 const i18n = require('i18n')
+const _ = require('lodash')
 i18n.configure({
   locales: ['en'],
   defaultLocale: 'en',
@@ -524,26 +525,31 @@ exports.createRouter = (config = {}) => {
 
   router.get('/twofactorrecoverycodes', authenticated, fetchRecoveryCodes, (req, res, next) => {
     const { user, jwt } = req
-    renderFile(req, res, next, 'twofactorcodes.html', {
-      title: 'Your recovery codes',
-      codes: user.recoveryCodes,
-      user,
-      jwt
-    })
-  })
-
-  router.get('/twofactorrecoveryregenerate', authenticated, (req, res, next) => {
-    const { user, jwt } = req
-    users.createRecoveryCodes(user)
-      .then(codes => {
-        return renderFile(req, res, next, 'twofactorcodes.html', {
+    return crypto.decryptRecovery(user.recoveryCodes)
+      .then((codes) => {
+        renderFile(req, res, next, 'twofactorcodes.html', {
           title: 'Your recovery codes',
           codes,
           user,
           jwt
         })
       })
-      .catch(next)
+  })
+
+  router.get('/twofactorrecoveryregenerate', authenticated, (req, res, next) => {
+    const { user, jwt } = req
+    users.createRecoveryCodes(user)
+    .then((codes) => {
+      return crypto.decryptRecovery(codes)
+        .then((codes) => {
+          renderFile(req, res, next, 'twofactorcodes.html', {
+            title: 'Your recovery codes',
+            codes,
+            user,
+            jwt
+          })
+        })
+    })
   })
 
   router.get('/twofactor', authenticated, (req, res, next) => {
@@ -572,7 +578,7 @@ exports.createRouter = (config = {}) => {
           return redirect(user)
             .then(url => res.redirect(url))
         } else {
-          return database.useRecoveryCode(user.id, token)
+          return users.useRecoveryCode(user.id, token)
             .then(recoveryValidates => {
               if(recoveryValidates) {
                 return redirect(user)

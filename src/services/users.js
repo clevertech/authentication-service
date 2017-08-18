@@ -25,6 +25,7 @@ const reject = reason => {
 module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
   const baseUrl = env('BASE_URL')
   const projectName = env('PROJECT_NAME')
+  const crypto = require('../utils/crypto')(env)
   const random = (length = 16) => require('crypto').randomBytes(length).toString('hex')
   const createToken = () => {
     return jwt.sign({ code: random() }, { expiresIn: '24h' })
@@ -44,8 +45,12 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
         })
     },
     createRecoveryCodes (user) {
-      const codes = _.map(Array(NUMBER_OF_RECOVERY_CODES), () => random(4))
-      return database.insertRecoveryCodes(user.id, codes)
+      return Promise.all(_.map(Array(NUMBER_OF_RECOVERY_CODES), () => {
+        return crypto.encrypt(random(4))
+      }))
+      .then((codes) => {
+        return database.insertRecoveryCodes(user.id, codes)
+      })
     },
     register (params, client) {
       const email = normalizeEmail(params.email)
@@ -178,6 +183,22 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
             emailConfirmed: true,
             emailConfirmationToken: null
           })
+        })
+    },
+    useRecoveryCode (userId, token) {
+      return database.findRecoveryCodesByUserId(userId)
+        .then((codes) => {
+          return crypto.decryptRecovery(codes)
+            .then((decrypted) => {
+              const toUse = _.find(decrypted, (code) => {
+                return code.decrypted.toUpperCase() === token.toUpperCase() && code.used === false
+              })
+              if(toUse) {
+                return database.useRecoveryCode(userId, toUse.code)
+              } else {
+                return Promise.reject()
+              }
+            })
         })
     }
   }

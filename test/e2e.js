@@ -124,8 +124,36 @@ test.serial('GET /auth/twofactorrecoverycodes', t => {
   })
 })
 
+// Confirm that an invalid code _does not_ allow us to sign in
+test.serial('POST /auth/twofactor invalid code', t => {
+  return superagent.post(`${baseUrl}/auth/signin`)
+    .send(`email=test%2B${r}@clevertech.biz`)
+    .send('password=thisistechnicallyapassword')
+    .then((response) => {
+      t.truthy(response.redirects)
+      t.truthy(response.redirects[0])
+      const redirect = response.redirects[0]
+      // Store the new JWT
+      _jwtToken = redirect.substring(redirect.indexOf('?jwt=')+5, redirect.length)
+      // Confirm that the JWT does indeed contain the data we want
+      const decoded = jwt.decode(_jwtToken)
+      t.is(decoded.userId, userId)
+
+      return superagent.post(`${baseUrl}/auth/twofactor?jwt=${_jwtToken}`)
+        .send(`token=ABCDEFGH`)
+        .then((response) => {
+          // Confirm that we were redirected
+          t.truthy(response.redirects.length)
+        })
+        .catch((error) => {
+          console.log('Error:', error)
+          t.truthy(error)
+        })
+    })
+})
+
 // Confirm that the code captured above allows us to sign in
-test.serial('POST /auth/twofactor', t => {
+test.serial('POST /auth/twofactor valid code', t => {
   return superagent.post(`${baseUrl}/auth/signin`)
     .send(`email=test%2B${r}@clevertech.biz`)
     .send('password=thisistechnicallyapassword')
@@ -142,9 +170,9 @@ test.serial('POST /auth/twofactor', t => {
       return superagent.post(`${baseUrl}/auth/twofactor?jwt=${_jwtToken}`)
         .send(`token=${_2FAtoken}`)
         .then((response) => {
-            // Confirm that the JWT does indeed contain the data we want
-            const decoded = jwt.decode(response.body)
-            t.is(decoded.user.email, `test+${r}@clevertech.biz`)
+          // Confirm that the JWT does indeed contain the data we want
+          const decoded = jwt.decode(response.body)
+          t.is(decoded.user.email, `test+${r}@clevertech.biz`)
         })
         .catch((error) => {
           t.falsy(error)

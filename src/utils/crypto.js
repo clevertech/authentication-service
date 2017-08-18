@@ -1,4 +1,5 @@
 const crypto = require('crypto')
+const _ = require('lodash')
 
 const separator = '.'
 const encoding = 'hex'
@@ -28,7 +29,16 @@ module.exports = env => {
           dec += decipher.final('utf8')
           return dec
         })
-    }
+    },
+    decryptRecovery (recoveryCodes) {
+      return Promise.all(_.map(recoveryCodes, (encrypted) => {
+        return this.decrypt(encrypted.code)
+          .then((decrypted) => {
+            encrypted.decrypted = decrypted
+            return encrypted
+          })
+      }))
+    },
   }
 }
 

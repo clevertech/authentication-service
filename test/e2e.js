@@ -13,6 +13,13 @@ const db = require('../src/database/adapter')(env)
 
 require('../').startServer(settings) // starts the app server
 
+// Declare some variables for storing things between tests
+let _jwtToken
+let _2FAtoken
+let userId
+// Random number so that we don't have unique key collisions
+const r = Math.ceil(Math.random()*Number.MAX_SAFE_INTEGER)
+
 test('GET /auth/register', t => {
   t.plan(2)
   return superagent.get(`${baseUrl}/auth/register`)
@@ -24,8 +31,6 @@ test('GET /auth/register', t => {
       t.falsy(error)
     })
 })
-
-const r = Math.ceil(Math.random()*Number.MAX_SAFE_INTEGER)
 
 // Create a new account
 test.serial('POST /auth/register', t => {
@@ -42,9 +47,6 @@ test.serial('POST /auth/register', t => {
       t.falsy(error)
     })
 })
-
-// Create a JWT variable, for use with all of our post-signin requests
-let _jwtToken
 
 // Mark that account as having a confirmed email address
 // Then sign into that account
@@ -71,11 +73,6 @@ test.serial('POST /auth/signin', t => {
       })
   })
 })
-
-// Create a variable to test that two-factor authentication works
-let _2FAtoken
-// Store the userId for later when we log in with our 2FA key
-let userId
 
 // Mark the account as having QR twofactor authentication
 // Create two factor recovery codes

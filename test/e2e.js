@@ -13,7 +13,6 @@ const db = require('../src/database/adapter')(env)
 
 require('../').startServer(settings) // starts the app server
 
-
 test('GET /auth/register', t => {
   t.plan(2)
   return superagent.get(`${baseUrl}/auth/register`)

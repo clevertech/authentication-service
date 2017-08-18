@@ -181,7 +181,7 @@ test.serial('POST /auth/twofactor valid code', t => {
 })
 
 // Confirm that the code captured above DOES NOT allow us to sign in a second time
-test.serial('POST /auth/twofactor invalid code', t => {
+test.serial('POST /auth/twofactor duplicate code', t => {
   return superagent.post(`${baseUrl}/auth/signin`)
     .send(`email=test%2B${r}@clevertech.biz`)
     .send('password=thisistechnicallyapassword')

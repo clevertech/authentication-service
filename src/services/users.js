@@ -5,7 +5,7 @@ const _ = require('lodash')
 // We need to create this invalid hash, with passwords.hash, to prevent timing attacks (see below)
 let invalidHash = null
 passwords.hash('invalidEmail', 'anypasswordyoucanimagine')
-  .then(hash => (invalidHash = hash))   
+  .then(hash => (invalidHash = hash))
   .catch(err => console.error(err))
 
 const NUMBER_OF_RECOVERY_CODES = 10

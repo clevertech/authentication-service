@@ -1,6 +1,6 @@
 {
   "name": "pnp-authentication-service",
-  "version": "0.1.17",
+  "version": "0.1.18",
   "description": "Clevertech's micro service for authentication",
   "author": "Clevertech <support@clevertech.biz>",
   "main": "src/index.js",

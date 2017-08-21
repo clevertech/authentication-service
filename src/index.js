@@ -525,8 +525,8 @@ exports.createRouter = (config = {}) => {
         redirectToDone(res, { info: 'TWO_FACTOR_AUTHENTICATION_DISABLED' })
       })
       .catch(next)
-      })
     })
+  })
 
   router.get('/twofactorrecoverycodes', authenticated, fetchRecoveryCodes, (req, res, next) => {
     const { user, jwt } = req

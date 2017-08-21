@@ -10,7 +10,7 @@ module.exports = env => {
     db = connection
   })
 
-  function sanitizeOutputs(f) {
+  function sanitizeOutputs (f) {
     return (key) => {
       return f(key).then(res => {
         if (res) {
@@ -28,18 +28,18 @@ module.exports = env => {
     init () {
       return Promise.resolve()
     },
-    findUserByEmail: sanitizeOutputs(function(email) {
+    findUserByEmail: sanitizeOutputs(function (email) {
       return db.collection('auth_users').findOne({ email })
     }),
-    findUserByEmailConfirmationToken: sanitizeOutputs(function(emailConfirmationToken) {
+    findUserByEmailConfirmationToken: sanitizeOutputs(function (emailConfirmationToken) {
       return db.collection('auth_users').findOne({ emailConfirmationToken })
     }),
-    findUserById: sanitizeOutputs(function(id) {
+    findUserById: sanitizeOutputs(function (id) {
       return db.collection('auth_users').findOne({ _id: mongo.ObjectID(id) })
     }),
-    findUserByProviderLogin: sanitizeOutputs(function(login) {
+    findUserByProviderLogin: sanitizeOutputs(function (login) {
       return db.collection('auth_providers').findOne({ login }).then(function (provider) {
-        if(!provider) {
+        if (!provider) {
           return Promise.resolve(null)
         }
         return db.collection('auth_users').findOne({ _id: mongo.ObjectID(provider.userId) })

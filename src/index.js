@@ -13,7 +13,6 @@ const useragent = require('useragent')
 const speakeasy = require('speakeasy')
 const QRCode = require('qrcode')
 const i18n = require('i18n')
-const _ = require('lodash')
 i18n.configure({
   locales: ['en'],
   defaultLocale: 'en',
@@ -120,7 +119,7 @@ exports.createRouter = (config = {}) => {
 
   const router = express.Router()
   router.use(bodyParser.urlencoded({ extended: false }))
-  //router.use(recaptcha.middleware())
+  router.use(recaptcha.middleware())
   router.use(i18n.init)
 
   const availableProviders = Object.keys(providers).reduce((obj, provider) => {
@@ -580,7 +579,7 @@ exports.createRouter = (config = {}) => {
         } else {
           return users.useRecoveryCode(user.id, token)
             .then(recoveryValidates => {
-              if(recoveryValidates) {
+              if (recoveryValidates) {
                 return redirect(user)
                   .then(url => res.redirect(url))
               } else {

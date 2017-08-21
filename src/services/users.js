@@ -1,6 +1,5 @@
 const passwords = require('../utils/passwords')
 const querystring = require('querystring')
-const async = require('async')
 const _ = require('lodash')
 
 const invalidHash = ''
@@ -193,7 +192,7 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
               const toUse = _.find(decrypted, (code) => {
                 return code.decrypted.toUpperCase() === token.toUpperCase() && code.used === false
               })
-              if(toUse) {
+              if (toUse) {
                 return database.useRecoveryCode(userId, toUse.code)
               } else {
                 return Promise.reject()

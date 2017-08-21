@@ -156,7 +156,7 @@ module.exports = env => {
         .then(updateCount => !!updateCount)
     },
     insertUser (user) {
-      user = _.omit(user, ['id', '_id']);
+      user = _.omit(user, ['id', '_id'])
       const userId = uuid()
       user.id = userId
       return db('auth_users').insert(user).then(res => {
@@ -167,7 +167,7 @@ module.exports = env => {
       return db('auth_users').where('id', '=', user.id).update(user)
     },
     insertProvider (provider) {
-      if(env('DATABASE_ENGINE') === 'mysql') {
+      if (env('DATABASE_ENGINE') === 'mysql') {
         provider.data = JSON.stringify(provider.data)
       }
       return db('auth_providers').insert(provider)

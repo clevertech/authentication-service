@@ -18,7 +18,7 @@ let _jwtToken
 let _2FAtoken
 let userId
 // Random number so that we don't have unique key collisions
-const r = Math.ceil(Math.random()*Number.MAX_SAFE_INTEGER)
+const r = Math.ceil(Math.random() * Number.MAX_SAFE_INTEGER)
 
 test('GET /auth/register', t => {
   t.plan(2)
@@ -81,7 +81,7 @@ test.serial('GET /auth/twofactorrecoveryregenerate', t => {
   .then(user => {
     userId = user.id
     user.twofactor = 'qr'
-    user.twofactorSecret='af4e0e215741432aa2d3aa8fbfa8f15da6ae3b1f90df15498aa471792728e513cd4d3add6235591354ec552336a1292c7b60499a.a3fe82198c6eb29349ffbed773701230.a261c30328f73ec693b9a1b208eb4935'
+    user.twofactorSecret = 'af4e0e215741432aa2d3aa8fbfa8f15da6ae3b1f90df15498aa471792728e513cd4d3add6235591354ec552336a1292c7b60499a.a3fe82198c6eb29349ffbed773701230.a261c30328f73ec693b9a1b208eb4935'
     return db.updateUser(user)
       .then((success) => {
         t.truthy(success)
@@ -93,7 +93,7 @@ test.serial('GET /auth/twofactorrecoveryregenerate', t => {
             // Make sure the div actually showed up in the response
             t.truthy(codeDivLocation >= 0)
 
-            _2FAtoken = body.substring(codeDivLocation+codeDiv.length, codeDivLocation+codeDiv.length+8)
+            _2FAtoken = body.substring(codeDivLocation + codeDiv.length, codeDivLocation + codeDiv.length + 8)
             // Make sure that the recovery code is an 8-character hexadecimal string
             t.truthy(/^[0-9A-F]{8}$/.test(_2FAtoken))
           })
@@ -114,7 +114,7 @@ test.serial('GET /auth/twofactorrecoverycodes', t => {
     // Make sure the div actually showed up in the response
     t.truthy(codeDivLocation >= 0)
 
-    const new2FAtoken = body.substring(codeDivLocation+codeDiv.length, codeDivLocation+codeDiv.length+8)
+    const new2FAtoken = body.substring(codeDivLocation + codeDiv.length, codeDivLocation + codeDiv.length + 8)
     // Make sure that the recovery code is an 8-character hexadecimal string
     t.truthy(/^[0-9A-F]{8}$/.test(new2FAtoken))
     t.is(_2FAtoken, new2FAtoken)
@@ -134,7 +134,7 @@ test.serial('POST /auth/twofactor invalid code', t => {
       t.truthy(response.redirects[0])
       const redirect = response.redirects[0]
       // Store the new JWT
-      _jwtToken = redirect.substring(redirect.indexOf('?jwt=')+5, redirect.length)
+      _jwtToken = redirect.substring(redirect.indexOf('?jwt=') + 5, redirect.length)
       // Confirm that the JWT does indeed contain the data we want
       const decoded = jwt.decode(_jwtToken)
       t.is(decoded.userId, userId)
@@ -162,7 +162,7 @@ test.serial('POST /auth/twofactor valid code', t => {
       t.truthy(response.redirects[0])
       const redirect = response.redirects[0]
       // Store the new JWT
-      _jwtToken = redirect.substring(redirect.indexOf('?jwt=')+5, redirect.length)
+      _jwtToken = redirect.substring(redirect.indexOf('?jwt=') + 5, redirect.length)
       // Confirm that the JWT does indeed contain the data we want
       const decoded = jwt.decode(_jwtToken)
       t.is(decoded.userId, userId)
@@ -190,7 +190,7 @@ test.serial('POST /auth/twofactor duplicate code', t => {
       t.truthy(response.redirects[0])
       const redirect = response.redirects[0]
       // Store the new JWT
-      _jwtToken = redirect.substring(redirect.indexOf('?jwt=')+5, redirect.length)
+      _jwtToken = redirect.substring(redirect.indexOf('?jwt=') + 5, redirect.length)
       // Confirm that the JWT does indeed contain the data we want
       const decoded = jwt.decode(_jwtToken)
       t.is(decoded.userId, userId)

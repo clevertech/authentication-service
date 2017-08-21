@@ -38,7 +38,7 @@ module.exports = env => {
             return encrypted
           })
       }))
-    },
+    }
   }
 }
 

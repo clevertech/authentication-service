@@ -517,10 +517,14 @@ exports.createRouter = (config = {}) => {
       twofactorPhone: null
     })
     .then(() => {
-      redirectToDone(res, { info: 'TWO_FACTOR_AUTHENTICATION_DISABLED' })
+      // This will actually delete all of the existing codes, and insert nothing to replace them
+      return database.insertRecoveryCodes(user.id, [])
+      .then(() => {
+        redirectToDone(res, { info: 'TWO_FACTOR_AUTHENTICATION_DISABLED' })
+      })
+      .catch(next)
+      })
     })
-    .catch(next)
-  })
 
   router.get('/twofactorrecoverycodes', authenticated, fetchRecoveryCodes, (req, res, next) => {
     const { user, jwt } = req

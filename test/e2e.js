@@ -207,3 +207,19 @@ test.serial('POST /auth/twofactor duplicate code', t => {
         })
     })
 })
+
+// Confirm that disabling 2FA deletes recovery codes
+test.serial('POST /auth/configuretwofactordisable deletes recovery codes', t => {
+  return superagent.post(`${baseUrl}/auth/configuretwofactordisable?jwt=${_jwtToken}`)
+    .then((response) => {
+      t.truthy(response.redirects)
+      t.truthy(response.redirects[0])
+      db.findRecoveryCodesByUserId(userId)
+        .then((codes) => {
+          t.is(codes, [])
+        })
+    })
+    .catch((error) => {
+      t.falsy(error)
+    })
+})

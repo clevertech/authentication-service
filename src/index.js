@@ -235,9 +235,11 @@ exports.createRouter = (config = {}) => {
       .catch(next)
   })
 
-  router.get('/landing', authenticated, (req, res, next) => {
-    res.status(200).json(req.query.jwt)
-  })
+  if (env('NODE_ENV') === 'test') {
+    router.get('/landing', authenticated, (req, res, next) => {
+      res.status(200).json(req.query.jwt)
+    })
+  }
 
   router.get('/register', (req, res, next) => {
     renderIndex(req, res, next, {

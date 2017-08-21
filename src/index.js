@@ -56,7 +56,6 @@ exports.createRouter = (config = {}) => {
       body: JSON.stringify(body),
       headers: { 'Content-Type': 'application/json' }
     })
-    // .then(res => res.text()).then(text => console.log(text))
     .catch((err) => {
       winston.error(err)
       return Promise.reject(err)
@@ -101,7 +100,7 @@ exports.createRouter = (config = {}) => {
           return jwt.sign({ userId: user.id }, { expiresIn: '1h' }).then(token => baseUrl + '/twofactor?jwt=' + token)
         })
     }
-    return redirect(user)
+    return redirect(user).then(url => url)
   }
 
   const providerSignup = (user, res) => {
@@ -145,7 +144,7 @@ exports.createRouter = (config = {}) => {
     const token = req.query.jwt || req.body.jwt
     jwt.verify(token)
       .then(data => {
-        return database.findUserById(data.userId)
+        return database.findUserById(data.userId || data.user.id)
           .then(user => {
             if (!user) return Promise.reject(new Error('USER_NOT_FOUND'))
             req.user = user
@@ -157,6 +156,15 @@ exports.createRouter = (config = {}) => {
       .catch(err => {
         console.error(err.stack)
         res.render('Error')
+      })
+  }
+
+  const fetchRecoveryCodes = (req, res, next) => {
+    return database.findRecoveryCodesByUserId(req.user.id)
+      .then(codes => {
+        if (!codes) return Promise.reject(new Error('RECOVERY_CODES_NOT_FOUND'))
+        req.user.recoveryCodes = codes
+        next()
       })
   }
 
@@ -227,6 +235,12 @@ exports.createRouter = (config = {}) => {
       .catch(next)
   })
 
+  if (env('NODE_ENV') === 'test') {
+    router.get('/landing', authenticated, (req, res, next) => {
+      res.status(200).json(req.query.jwt)
+    })
+  }
+
   router.get('/register', (req, res, next) => {
     renderIndex(req, res, next, {
       title: 'Register',
@@ -247,7 +261,10 @@ exports.createRouter = (config = {}) => {
         return redirect(user)
           .then(url => res.redirect(url))
       })
-      .catch(next)
+      .catch((err) => {
+        console.error(err)
+        res.status(500).send(err)
+      })
   })
 
   router.get('/resetpassword', (req, res, next) => {
@@ -325,8 +342,6 @@ exports.createRouter = (config = {}) => {
       .catch(next)
   })
 
-  const labelForQr = user => `${projectName} (${user.email})`
-
   const normalizePhone = str => {
     const match = str.match(/\d+/g)
     if (!match) return ''
@@ -349,7 +364,8 @@ exports.createRouter = (config = {}) => {
     const url = speakeasy.otpauthURL({
       secret: twofactorSecret,
       encoding: 'base32',
-      label: encodeURIComponent(labelForQr(user))
+      label: user.email,
+      issuer: projectName
     })
     qrForUrl(url)
       .then(qrCode => {
@@ -366,7 +382,7 @@ exports.createRouter = (config = {}) => {
 
   router.get('/configuretwofactor', authenticated, (req, res, next) => {
     const { user } = req
-    const secret = speakeasy.generateSecret({ name: labelForQr(user) })
+    const secret = speakeasy.generateSecret({ name: user.email })
     const jwtData = { userId: user.id, twofactorSecret: secret.base32 }
     jwt.sign(jwtData, { expiresIn: '1h' })
       .then((jwt) => {
@@ -503,9 +519,42 @@ exports.createRouter = (config = {}) => {
       twofactorPhone: null
     })
     .then(() => {
-      redirectToDone(res, { info: 'TWO_FACTOR_AUTHENTICATION_DISABLED' })
+      // This will actually delete all of the existing codes, and insert nothing to replace them
+      return database.insertRecoveryCodes(user.id, [])
+      .then(() => {
+        redirectToDone(res, { info: 'TWO_FACTOR_AUTHENTICATION_DISABLED' })
+      })
+      .catch(next)
     })
-    .catch(next)
+  })
+
+  router.get('/twofactorrecoverycodes', authenticated, fetchRecoveryCodes, (req, res, next) => {
+    const { user, jwt } = req
+    return crypto.decryptRecovery(user.recoveryCodes)
+      .then((codes) => {
+        renderFile(req, res, next, 'twofactorcodes.html', {
+          title: 'Your recovery codes',
+          codes,
+          user,
+          jwt
+        })
+      })
+  })
+
+  router.get('/twofactorrecoveryregenerate', authenticated, (req, res, next) => {
+    const { user, jwt } = req
+    users.createRecoveryCodes(user)
+    .then((codes) => {
+      return crypto.decryptRecovery(codes)
+        .then((codes) => {
+          renderFile(req, res, next, 'twofactorcodes.html', {
+            title: 'Your recovery codes',
+            codes,
+            user,
+            jwt
+          })
+        })
+    })
   })
 
   router.get('/twofactor', authenticated, (req, res, next) => {
@@ -534,7 +583,15 @@ exports.createRouter = (config = {}) => {
           return redirect(user)
             .then(url => res.redirect(url))
         } else {
-          return Promise.reject(new Error('INVALID_TOKEN'))
+          return users.useRecoveryCode(user.id, token)
+            .then(recoveryValidates => {
+              if (recoveryValidates) {
+                return redirect(user)
+                  .then(url => res.redirect(url))
+              } else {
+                return Promise.reject(new Error('INVALID_TOKEN'))
+              }
+            })
         }
       })
       .catch(next)
@@ -601,3 +658,4 @@ if (require.main === module) {
     winston.info(`Listening on port ${port}! Visit http://127.0.0.1:${port}/auth`)
   })
 }
+

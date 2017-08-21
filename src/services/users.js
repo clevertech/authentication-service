@@ -1,11 +1,14 @@
 const passwords = require('../utils/passwords')
 const querystring = require('querystring')
-const uuid = require('uuid/v4')
+const _ = require('lodash')
 
+// We need to create this invalid hash, with passwords.hash, to prevent timing attacks (see below)
 let invalidHash = null
 passwords.hash('invalidEmail', 'anypasswordyoucanimagine')
-  .then(hash => (invalidHash = hash))
+  .then(hash => (invalidHash = hash))   
   .catch(err => console.error(err))
+
+const NUMBER_OF_RECOVERY_CODES = 10
 
 const normalizeEmail = email => email.toLowerCase()
 
@@ -26,7 +29,8 @@ const reject = reason => {
 module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
   const baseUrl = env('BASE_URL')
   const projectName = env('PROJECT_NAME')
-  const random = () => require('crypto').randomBytes(16).toString('hex')
+  const crypto = require('../utils/crypto')(env)
+  const random = (length = 16) => require('crypto').randomBytes(length).toString('hex')
   const createToken = () => {
     return jwt.sign({ code: random() }, { expiresIn: '24h' })
   }
@@ -41,10 +45,18 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
           // See https://en.wikipedia.org/wiki/Timing_attack
           return passwords.check(email, password, (user && user.password) || invalidHash)
             .then(ok => user && ok ? user : reject('INVALID_CREDENTIALS'))
+            .catch(err => reject(err))
         })
     },
+    createRecoveryCodes (user) {
+      return Promise.all(_.map(Array(NUMBER_OF_RECOVERY_CODES), () => {
+        return crypto.encrypt(random(4))
+      }))
+      .then((codes) => {
+        return database.insertRecoveryCodes(user.id, codes)
+      })
+    },
     register (params, client) {
-      const id = uuid()
       const email = normalizeEmail(params.email)
       const { provider } = params
       delete params.provider
@@ -88,10 +100,9 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
                     })
                     .then(() => {
                       return database.insertUser(Object.assign({}, user, {
-                        id,
                         emailConfirmationToken
                       }))
-                        .then(() => {
+                        .then((id) => {
                           const user = userInfo && userInfo.user
                           if (user) return database.insertProvider({ userId: id, login: user.login, data: user.data || {} })
                         })
@@ -135,7 +146,6 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
                     projectName,
                     link: baseUrl + '/reset?' + querystring.stringify({ emailConfirmationToken })
                   })
-                  // console.log('link', baseUrl + '/reset?' + querystring.stringify({ emailConfirmationToken }))
                 })
             })
         })
@@ -177,6 +187,22 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
             emailConfirmed: true,
             emailConfirmationToken: null
           })
+        })
+    },
+    useRecoveryCode (userId, token) {
+      return database.findRecoveryCodesByUserId(userId)
+        .then((codes) => {
+          return crypto.decryptRecovery(codes)
+            .then((decrypted) => {
+              const toUse = _.find(decrypted, (code) => {
+                return code.decrypted.toUpperCase() === token.toUpperCase() && code.used === false
+              })
+              if (toUse) {
+                return database.useRecoveryCode(userId, toUse.code)
+              } else {
+                return Promise.reject()
+              }
+            })
         })
     }
   }

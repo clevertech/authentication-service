@@ -60,7 +60,7 @@ module.exports = env => {
                 }, Promise.resolve([]))
                 .then(missing => {
                   if (missing) {
-                    return db.schema.createTableIfNotExists(
+                    return db.schema.alterTable(
                       'auth_users',
                       _.once(table => {
                         missing.forEach(fieldName => table.string(fieldName))
@@ -95,6 +95,16 @@ module.exports = env => {
             }))
           })
         })
+        .then(() => {
+          return db.schema.hasTable('auth_recovery_codes').then(tableExists => {
+            return tableExists ? Promise.resolve() : createTableIfNotExists('auth_recovery_codes', _.once(table => {
+              table.uuid('userId').notNullable()
+              table.foreign('userId').references('auth_users.id').onDelete('cascade')
+              table.string('code').notNullable()
+              table.boolean('used').notNullable().defaultTo(false)
+            }))
+          })
+        })
         .then(() => addColumn('auth_users', 'twofactorSecret', table => table.string('twofactorSecret')))
         .then(() => addColumn('auth_users', 'twofactorPhone', table => table.string('twofactorPhone')))
     },
@@ -113,8 +123,40 @@ module.exports = env => {
         .leftJoin('auth_users', 'auth_providers.userId', 'auth_users.id')
         .then(last)
     },
+    findRecoveryCodesByUserId (userId) {
+      return db('auth_recovery_codes')
+        .where({ userId })
+        .then(codes => codes)
+    },
+    insertRecoveryCodes (userId, codes) {
+      return db.transaction(trx => {
+        return db('auth_recovery_codes')
+          .where({ userId })
+          .del()
+          .then(res => {
+            return Promise.all(_.map(codes, (code) => {
+              return db('auth_recovery_codes')
+                .transacting(trx)
+                .insert({ userId, code })
+            }))
+          })
+          .then(trx.commit)
+          .catch(trx.rollback)
+      }).then(() => {
+        return Promise.resolve(_.map(codes, code => ({ code, used: false })))
+      }).catch((err) => {
+        console.error(err)
+        return Promise.reject()
+      })
+    },
+    useRecoveryCode (userId, code) {
+      return db('auth_recovery_codes')
+        .where({ userId, code: code.toLowerCase(), used: false })
+        .update({ used: true })
+        .then(updateCount => !!updateCount)
+    },
     insertUser (user) {
-      user = _.omit(user, ['id', '_id']);
+      user = _.omit(user, ['id', '_id'])
       const userId = uuid()
       user.id = userId
       return db('auth_users').insert(user).then(res => {
@@ -125,10 +167,11 @@ module.exports = env => {
       return db('auth_users').where('id', '=', user.id).update(user)
     },
     insertProvider (provider) {
-      if(env('DATABASE_ENGINE') === 'mysql') {
+      if (env('DATABASE_ENGINE') === 'mysql') {
         provider.data = JSON.stringify(provider.data)
       }
       return db('auth_providers').insert(provider)
     }
   }
 }
+

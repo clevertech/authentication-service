@@ -170,3 +170,7 @@ input.cropit-image-zoom-input {
 .select-image-btn-wrapper {
   margin: 10px 0 20px 0;
 }
+
+.strikethrough {
+  text-decoration: line-through;
+}

@@ -5,19 +5,18 @@ const databases = [
     human: 'MySQL',
     DATABASE_ENGINE: 'mysql',
     DATABASE_URL: 'mysql://root:root@localhost/auth'
-  },{
+  }, {
     human: 'PostgreSQL',
     DATABASE_ENGINE: 'pg',
     DATABASE_URL: 'postgresql://authtest:authtest@localhost/auth'
-  },{
+  }, {
     human: 'MongoDB',
     DATABASE_ENGINE: 'mongodb',
     DATABASE_URL: 'mongodb://localhost/auth'
   }
 ]
 
-for(var database of databases) {
-
+for (var database of databases) {
   let env = require('../src/utils/env')(database)
   let adapter = require('../src/database/adapter')(env)
   let randomId = parseInt(Math.random() * Number.MAX_SAFE_INTEGER)
@@ -30,13 +29,13 @@ for(var database of databases) {
         // We're not concerned with the output; just that it didn't error
         t.pass()
       }).catch(err => {
-        t.falsy(res)
+        t.falsy(err)
       })
   })
 
   test.serial(`${database.human} insertUser()`, t => {
     t.plan(1)
-    return adapter.insertUser({ email: `test+${randomId}@clevertech.biz`, emailConfirmationToken: `token${randomId}`})
+    return adapter.insertUser({ email: `test+${randomId}@clevertech.biz`, emailConfirmationToken: `token${randomId}` })
       .then(res => {
         // Capture the inserted ID so we can use it later
         userId = res
@@ -119,5 +118,4 @@ for(var database of databases) {
         t.falsy(err)
       })
   })
-
 }

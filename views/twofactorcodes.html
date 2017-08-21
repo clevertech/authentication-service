@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <%- include('./include-head.html', { projectName, title }) %>
+  <%- include('./include-head-recaptcha.html', { recaptchaSiteKey }) %>
+</head>
+<body>
+  <%- include('./include-recaptcha.html', { recaptchaSiteKey }) %>
+  <%- include('./include-alert.html', { error, info }) %>
+  <div class="ui middle aligned center aligned grid">
+    <div class="column">
+      <h2 class="ui teal header">
+        <div class="content">
+          These are your recovery codes.
+        </div>
+        <div class="content">
+          Keep them secret, keep them safe.
+        </div>
+      </h2>
+        <div class="ui stacked segment aligned center">
+          <div class="ui two column padded grid">
+            <% for (const code of codes) { %>
+              <div class="column twofactorcode<%= code.used ? ' strikethrough' : '' %>"><%= code.decrypted.toUpperCase() %></div>
+              <% } %>
+          </div>
+
+          <a href="<%= baseUrl %>/twofactorrecoveryregenerate?jwt=<%= jwt %>">
+            <button type="submit" class="ui fluid teal submit button">Regenerate Codes</button>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <%- include('./include-javascript.html', { forms }) %>
+</body>
+</html>

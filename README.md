@@ -97,10 +97,9 @@ This is the list of available configuration options:
 | --- | --- |
 | `DATABASE_ENGINE` | The engine to use for your database of choice. Supported values: [`pg`, `mysql`, `mongo`] |
 | `DATABASE_URL` | Connection string for your database. Example: `postgresql://user:pass@host/database` |
-| `EMAIL_DEFAULT_FROM` | The email address that emails will be sent from via the `pnp-email-service` |
 | `EMAIL_CONFIRMATION_PROVIDERS` | Set to true if you want to send a confirmation email to your users to confirm their email addresses even when they signup with third party services such as Facebook |
 | `EMAIL_CONFIRMATION` | Set to true if you want to send a confirmation email to your users to confirm their email addresses |
-| Email configuration | There are a number of configuration options used to control email sending behavior. See [the `pnp-email-service` README](https://github.com/clevertech/email-service#configuration-options) for more information. |
+| Email transport configuration | There are a number of configuration options used to control email sending behavior. See [the `pnp-email-service` README](https://github.com/clevertech/email-service#configuration-options) for more information. |
 | `FACEBOOK_APP_ID` | Required if you want to sign in your users with Facebook |
 | `FACEBOOK_APP_SECRET` | Required if you want to sign in your users with Facebook |
 | `GOOGLE_CLIENT_ID` | Required if you want to sign in your users with Google |
@@ -125,6 +124,8 @@ This is the list of available configuration options:
 | `TWILIO_NUMBER_FROM` | Optional. Configure this for adding SMS support for 2FA |
 
 The simplest JWT configuration is just setting up the `JWT_SECRET` value.
+
+Any and all configuration options can be optionally prepended with `AUTH_`, while any Email configration can be prepended with `EMAIL_`, if you prefer to differentiate them.
 
 ## Configuration example
 
@@ -158,7 +159,7 @@ jwt.sign({ userId: user.id })
   })
 ```
 
-There are two supported mechanisms for 2FA: via app or via SMS. If you want to enable SMS you will need to configure the `TWILIO_xxx` env variables.
+There are two supported mechanisms for 2FA: via authenticator app (such as Google Authenticator) or via SMS. If you want to enable SMS you will need to configure the `TWILIO_xxx` env variables.
 
 You will also need to configure a `SYMMETRIC_KEY` that will be used to encrypt users's 2FA seeds.
 
@@ -175,7 +176,7 @@ jwt.sign({ userId: user.id })
 
 ## Security
 
-This microservice is intented to be very secure.
+This microservice is intended to be very secure.
 
 ### Forgot password functionality
 

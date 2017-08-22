@@ -5,12 +5,14 @@ const _ = require('lodash')
 // We need to create this invalid hash, with passwords.hash, to prevent timing attacks (see below)
 let invalidHash = null
 passwords.hash('invalidEmail', 'anypasswordyoucanimagine')
-  .then(hash => (invalidHash = hash))   
+  .then(hash => (invalidHash = hash))
   .catch(err => console.error(err))
 
 const NUMBER_OF_RECOVERY_CODES = 10
 
 const normalizeEmail = email => email.toLowerCase()
+
+const getEmailDomain = email => email.replace(/.*@/, '')
 
 const userName = user => {
   return user.name ||
@@ -35,9 +37,25 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
     return jwt.sign({ code: random() }, { expiresIn: '24h' })
   }
 
+  let whiteListedDomains = []
+  try {
+    whiteListedDomains = env('WHITELISTED_DOMAINS').split(',').map(str => str.toLowerCase().trim())
+  } catch (e) {
+    console.error(`WHITELISTED_DOMAINS not set as comma delimited string of email addresses properly, error: ${e.stack}`)
+  }
+
+  // Allow all domains when no domains have been selected or check to see if the domain is one that has been whitelisted
+  const isDomainAuthorized = domain => !whiteListedDomains.length || whiteListedDomains.includes(domain)
+
   return {
     login (email, password, client) {
       email = normalizeEmail(email)
+      if (!isDomainAuthorized(getEmailDomain(email))) {
+        const error = `non-whitelisted user "${email}" attempted to login`
+        console.log(error)
+        return Promise.reject(error)
+      }
+
       return database.findUserByEmail(email)
         .then(user => {
           // If the user does not exist, use the check function anyways
@@ -58,6 +76,13 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
     },
     register (params, client) {
       const email = normalizeEmail(params.email)
+
+      if (!isDomainAuthorized(getEmailDomain(email))) {
+        const error = `non-whitelisted user "${email}" attempted to register`
+        console.log(error)
+        return Promise.reject(error)
+      }
+
       const { provider } = params
       delete params.provider
       if (!params.image) delete params.image // removes empty strings

@@ -122,6 +122,7 @@ This is the list of available configuration options:
 | `TWILIO_ACCOUNT_SID` | Optional. Configure this for adding SMS support for 2FA |
 | `TWILIO_AUTH_TOKEN` | Optional. Configure this for adding SMS support for 2FA |
 | `TWILIO_NUMBER_FROM` | Optional. Configure this for adding SMS support for 2FA |
+| `WHITELISTED_DOMAINS` | Optional. Limits creating/authenticating users on these specified domains only |
 
 The simplest JWT configuration is just setting up the `JWT_SECRET` value.
 
@@ -140,6 +141,7 @@ AUTH_REDIRECT_URL=http://yourserver/callback
 AUTH_EMAIL_CONFIRMATION=true
 AUTH_STYLESHEET=http://yourserver/stylesheet.css
 JWT_SECRET=shhhh
+WHITELISTED_DOMAINS=clevertech.biz,clevertech.com
 
 EMAIL_DEFAULT_FROM=hello@yourserver.com
 EMAIL_TRANSPORT=ses
@@ -176,7 +178,7 @@ jwt.sign({ userId: user.id })
 
 ## Security
 
-This microservice is intended to be very secure.
+This microservice is intended to be very secure.  User accounts can be limited to certain domains by configuring the `WHITELISTED_DOMAINS` env variable.
 
 ### Forgot password functionality
 

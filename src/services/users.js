@@ -37,7 +37,7 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
     return jwt.sign({ code: random() }, { expiresIn: '24h' })
   }
 
-  let whiteListedDomains
+  let whiteListedDomains = []
   try {
     whiteListedDomains = env('WHITELISTED_DOMAINS').split(',').map(str => str.toLowerCase().trim())
   } catch (e) {

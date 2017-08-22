@@ -95,32 +95,37 @@ This is the list of available configuration options:
 
 | Variable | Description |
 | --- | --- |
-| `SIGNUP_FIELDS` | List of additional fields for the sign up form separated by commas. Available values are: name, firstName, lastName, company, address, city, state, zip, country |
-| `PROJECT_NAME` | Your project's name |
-| `REDIRECT_URL` | Callback URL that the user will be redirected to when authenticated |
+| `DATABASE_ENGINE` | The engine to use for your database of choice. Supported values: [`pg`, `mysql`, `mongo`] |
+| `DATABASE_URL` | Connection string for your database. Example: `postgresql://user:pass@host/database` |
+| `EMAIL_CONFIRMATION_PROVIDERS` | Set to true if you want to send a confirmation email to your users to confirm their email addresses even when they signup with third party services such as Facebook |
+| `EMAIL_CONFIRMATION` | Set to true if you want to send a confirmation email to your users to confirm their email addresses |
+| Email transport configuration | There are a number of configuration options used to control email sending behavior. See [the `pnp-email-service` README](https://github.com/clevertech/email-service#configuration-options) for more information. |
 | `FACEBOOK_APP_ID` | Required if you want to sign in your users with Facebook |
 | `FACEBOOK_APP_SECRET` | Required if you want to sign in your users with Facebook |
 | `GOOGLE_CLIENT_ID` | Required if you want to sign in your users with Google |
 | `GOOGLE_CLIENT_SECRET` | Required if you want to sign in your users with Google |
-| `EMAIL_CONFIRMATION` | Set to true if you want to send a confirmation email to your users to confirm their email addresses |
-| `EMAIL_CONFIRMATION_PROVIDERS` | Set to true if you want to send a confirmation email to your users to confirm their email addresses even when they signup with third party services such as Facebook |
-| `STYLESHEET` | Optionally specify a URL with the stylesheet to be used in the authentication service. The default one can be found in `http://localhost:3000/auth/stylesheet.css` (change the URL if you are running the microservice somewhere else) |
-| `TERMS_AND_CONDITIONS` | Optionally specify the URL to the terms and conditions. If you specify one, a checkbox will be added with a link to them and the user will be required to accept the terms for signing up. Then this value is stored in the database, so you can for example specify a different URL every time you update the terms and conditions and you will know which version of the terms and conditions the user accepted. |
-| `RECAPTCHA_SITE_KEY` | If you want to use reCAPTCHA, set this configuration option and all forms will require to pass through reCAPTCHA |
-| `RECAPTCHA_SECRET_KEY` | If you want to use reCAPTCHA, set this configuration option and all forms will require to pass through reCAPTCHA |
 | `JWT_ALGORITHM` | The algorithm to be used in the JWT tokens. `HS256` by default |
-| `JWT_SECRET` | The JWT secret to be used when a HMAC algorithm is being used (such as for `HS256`) |
-| `JWT_PRIVATE_KEY` | The PEM encoded private key for RSA and ECDSA algorithms |
-| `JWT_PUBLIC_KEY` | The PEM encoded public key for RSA and ECDSA algorithms |
 | `JWT_EXPIRES_IN` | Optional. Default `expiresIn` value when generating JWT tokens |
 | `JWT_NOT_BEFORE` | Optional. Default `notBefore` value when generating JWT tokens |
+| `JWT_PRIVATE_KEY` | The PEM encoded private key for RSA and ECDSA algorithms |
+| `JWT_PUBLIC_KEY` | The PEM encoded public key for RSA and ECDSA algorithms |
+| `JWT_SECRET` | The JWT secret to be used when a HMAC algorithm is being used (such as for `HS256`) |
+| `PROJECT_NAME` | Your project's name. Will be used in emails, SMS messages, and page titles. |
+| `RECAPTCHA_SECRET_KEY` | If you want to use reCAPTCHA, set this configuration option and all forms will require to pass through reCAPTCHA |
+| `RECAPTCHA_SITE_KEY` | If you want to use reCAPTCHA, set this configuration option and all forms will require to pass through reCAPTCHA |
+| `REDIRECT_URL` | Callback URL that the user will be redirected to when authenticated |
+| `SIGNUP_FIELDS` | List of additional fields for the sign up form separated by commas. Available values are: name, firstName, lastName, company, address, city, state, zip, country |
+| `STYLESHEET` | Optionally specify a URL with the stylesheet to be used in the authentication service. The default one can be found in `http://localhost:3000/auth/stylesheet.css` (change the URL if you are running the microservice somewhere else) |
+| `SYMMETRIC_ALGORITHM` | Optional. It's the algorithm used for encrypting users's 2FA seeds. Defaults to `aes-256-gcm` |
+| `SYMMETRIC_KEY` | Optional. Required for 2FA. This is the key that will be used for encrypting users's 2FA seeds. You can easily create a key using `require('crypto').randomBytes(128 / 8).toString('hex')` on a Node.js interactive prompt. This generates a secure random 128bit key encoded as hexadecimal |
+| `TERMS_AND_CONDITIONS` | Optionally specify the URL to the terms and conditions. If you specify one, a checkbox will be added with a link to them and the user will be required to accept the terms for signing up. Then this value is stored in the database, so you can for example specify a different URL every time you update the terms and conditions and you will know which version of the terms and conditions the user accepted. |
 | `TWILIO_ACCOUNT_SID` | Optional. Configure this for adding SMS support for 2FA |
 | `TWILIO_AUTH_TOKEN` | Optional. Configure this for adding SMS support for 2FA |
 | `TWILIO_NUMBER_FROM` | Optional. Configure this for adding SMS support for 2FA |
-| `SYMMETRIC_KEY` | Optional. Required for 2FA. This is the key that will be used for encrypting users's 2FA seeds. You can easily create a key using `require('crypto').randomBytes(128 / 8).toString('hex')` on a Node.js interactive prompt. This generates a secure random 128bit key encoded as hexadecimal |
-| `SYMMETRIC_ALGORITHM` | Optional. It's the algorithm used for encrypting users's 2FA seeds. Defaults to `aes-256-gcm` |
 
 The simplest JWT configuration is just setting up the `JWT_SECRET` value.
+
+Any and all configuration options can be optionally prepended with `AUTH_`, while any Email configration can be prepended with `EMAIL_`, if you prefer to differentiate them.
 
 ## Configuration example
 
@@ -154,7 +159,7 @@ jwt.sign({ userId: user.id })
   })
 ```
 
-There are two supported mechanisms for 2FA: via app or via SMS. If you want to enable SMS you will need to configure the `TWILIO_xxx` env variables.
+There are two supported mechanisms for 2FA: via authenticator app (such as Google Authenticator) or via SMS. If you want to enable SMS you will need to configure the `TWILIO_xxx` env variables.
 
 You will also need to configure a `SYMMETRIC_KEY` that will be used to encrypt users's 2FA seeds.
 
@@ -171,7 +176,7 @@ jwt.sign({ userId: user.id })
 
 ## Security
 
-This microservice is intented to be very secure.
+This microservice is intended to be very secure.
 
 ### Forgot password functionality
 

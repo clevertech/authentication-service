@@ -1,0 +1,36 @@
+version: '2'
+services:
+  app:
+    build: .
+    command: yarn run start-dev
+    depends_on:
+      - mongo
+      - mysql
+      - postgres
+    environment:
+      JWT_SECRET: thebiggestsecretinclevertech
+      NODE_ENV: test
+      DATABASE_URL: postgresql://authtest:authtest@localhost/auth
+      AUTH_SIGNUP_FIELDS: firstName,lastName,username
+      AUTH_REDIRECT_URL: /auth/landing
+      AUTH_BASE_URL: http://localhost:3000/auth
+      SYMMETRIC_KEY: ee3b03dd1808d4172ee98ae6557c673c
+      PORT: 3001
+    ports:
+      - '3000:3000'
+      - '3001:3001'
+    volumes:
+      - .:/opt/app
+      - /opt/app/node_modules
+  mongo:
+    image: mongo:3.4.4
+    ports:
+      - '27018:27017'
+  mysql:
+    image: mysql:5.6.37
+    ports:
+      - '3306:3306'
+  postgres:
+    image: postgres:9.6.4
+    ports:
+      - '5432:5432'

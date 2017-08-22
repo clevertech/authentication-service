@@ -41,9 +41,10 @@ module.exports = (env, jwt, database, sendEmail, mediaClient, validations) => {
   try {
     whiteListedDomains = env('WHITELISTED_DOMAINS').split(',').map(str => str.toLowerCase().trim())
   } catch (e) {
-    console.log(`WHITELISTED_DOMAINS not set as comma delimited string of email addresses properly, error: ${e.stack}`)
+    console.error(`WHITELISTED_DOMAINS not set as comma delimited string of email addresses properly, error: ${e.stack}`)
   }
 
+  // Allow all domains when no domains have been selected or check to see if the domain is one that has been whitelisted
   const isDomainAuthorized = domain => !whiteListedDomains.length || whiteListedDomains.includes(domain)
 
   return {

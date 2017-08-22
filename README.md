@@ -178,7 +178,7 @@ jwt.sign({ userId: user.id })
 
 ## Security
 
-This microservice is intented to be very secure.  User accounts can be limited to certain domains by configuring the `WHITELISTED_DOMAINS` env variable.
+This microservice is intended to be very secure.  User accounts can be limited to certain domains by configuring the `WHITELISTED_DOMAINS` env variable.
 
 ### Forgot password functionality
 

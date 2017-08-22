@@ -21,4 +21,4 @@ CleverAuth does four things for you, right out of the box:
 2. CleverAuth will return a signed JWT on a successful signin, which your frontend UI should send along with the request on subsequent requests
 3. Configure the rest of your API to decode the JWTs with the same secret (configurable in CleverAuth), to confirm that the user is who they say they are.
 
-That's it!
+#### That's it!
